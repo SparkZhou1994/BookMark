@@ -1010,6 +1010,7 @@ List<String> l3 = Lists.newArrayList("or", "string", "elements"); // from vararg
 ```
 List<String> list = new ArrayList<String>();
 CollectionUtils.addAll(list, str);
+```
 6、使用 Java9 的 List.of()方法
 ```
 Integer[] array = {1, 2, 3};
