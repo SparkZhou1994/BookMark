@@ -1,5 +1,5 @@
-# Netty——异步和事件傡动
-## Netty的核ᗳ组件
+# Netty——异步和事件驱动
+## Netty的核心组件
 ### Channel
 传入或传出数据的载体，打开、关闭、连接、断开
 ### 回调
@@ -1095,7 +1095,32 @@ public class GracefulShutdown {
 ```
 也可以在调用EventLoopGroup.shutdownGracefully()方法之前，显示地在所有活动的Channel上调用Channel.close()。但在任何情况下，都要记得关闭EventLoopGroup本身。
 # 单元测试
-## EmbeddedChannel概述
+## 使用EmbeddedChannel测试ChannelHandler
+### 测试入站消息
+#### 代测试代码 解码器将产生固定为3字节大小的帧
+```
+public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
+    private final int frameLength;
+
+    public FixedLengthFrameDecoder(int frameLength) {
+        if (frameLength <= 0) {
+            throw new IllegalArgumentException(
+                "frameLength must be a positive integer: " + frameLength);
+        }
+        this.frameLength = frameLength;
+    }
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in,
+        List<Object> out) throws Exception {
+        while (in.readableBytes() >= frameLength) {
+            ByteBuf buf = in.readBytes(frameLength);
+            out.add(buf);
+        }
+    }
+}
+```
+#### 单元测试
 
 
 
