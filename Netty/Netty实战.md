@@ -1121,7 +1121,68 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
 }
 ```
 #### 单元测试
+```
+public class FixedLengthFrameDecoderTest {
+    @Test
+    public void testFramesDecoded() {
+        ByteBuf buf = Unpooled.buffer();
+        for (int i = 0; i < 9; i++) {
+            buf.writeByte(i);
+        }
+        ByteBuf input = buf.duplicate();
+        EmbeddedChannel channel = new EmbeddedChannel(
+            new FixedLengthFrameDecoder(3)); // 以3字节的帧长度被测试
+        // write bytes
+        assertTrue(channel.writeInbound(input.retain()));
+        assertTrue(channel.finish());
 
+        // read messages
+        ByteBuf read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(3), read); // 验证是否有3帧（切片），其中每帧都为3字节
+        read.release();
+
+        read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(3), read);
+        read.release();
+
+        read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(3), read);
+        read.release();
+
+        assertNull(channel.readInbound());
+        buf.release();
+    }
+
+    @Test
+    public void testFramesDecoded2() {
+        ByteBuf buf = Unpooled.buffer();
+        for (int i = 0; i < 9; i++) {
+            buf.writeByte(i);
+        }
+        ByteBuf input = buf.duplicate();
+
+        EmbeddedChannel channel = new EmbeddedChannel(
+            new FixedLengthFrameDecoder(3));
+        assertFalse(channel.writeInbound(input.readBytes(2))); // 返回 false，因为没有一个完整的可供读取的帧
+        assertTrue(channel.writeInbound(input.readBytes(7)));
+        assertTrue(channel.finish());
+        ByteBuf read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(3), read);
+        read.release();
+
+        read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(3), read);
+        read.release();
+
+        read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(3), read);
+        read.release();
+
+        assertNull(channel.readInbound());
+        buf.release();
+    }
+}
+```
 
 
 
