@@ -1183,13 +1183,187 @@ public class FixedLengthFrameDecoderTest {
     }
 }
 ```
+### 测试出站信息
+#### 待测试代码，将负数转为绝对值
+```
+public class AbsIntegerEncoder extends
+    MessageToMessageEncoder<ByteBuf> {
+    @Override
+    protected void encode(ChannelHandlerContext channelHandlerContext,
+        ByteBuf in, List<Object> out) throws Exception {
+        while (in.readableBytes() >= 4) {
+            int value = Math.abs(in.readInt());
+            out.add(value);
+        }
+    }
+}
+```
+#### 单元测试
+```
+public class AbsIntegerEncoderTest {
+    @Test
+    public void testEncoded() {
+        ByteBuf buf = Unpooled.buffer();
+        for (int i = 1; i < 10; i++) {
+            buf.writeInt(i * -1);
+        }
 
+        EmbeddedChannel channel = new EmbeddedChannel(
+            new AbsIntegerEncoder());
+        assertTrue(channel.writeOutbound(buf));
+        assertTrue(channel.finish());
 
+        // read bytes
+        for (int i = 1; i < 10; i++) {
+            assertEquals(i, channel.readOutbound());
+        }
+        assertNull(channel.readOutbound());
+    }
+}
+```
+## 测试异常处理
+### 待测试代码，最大帧为3字节，超出则抛异常
+```
+public class FrameChunkDecoder extends ByteToMessageDecoder {
+    private final int maxFrameSize;
 
+    public FrameChunkDecoder(int maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
+    }
 
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in,
+        List<Object> out)
+        throws Exception {
+        int readableBytes = in.readableBytes();
+        if (readableBytes > maxFrameSize) {
+            // discard the bytes
+            in.clear();
+            throw new TooLongFrameException();
+        }
+        ByteBuf buf = in.readBytes(readableBytes);
+        out.add(buf);
+    }
+}
+```
+### 单元测试
+```
+public class FrameChunkDecoderTest {
+    @Test
+    public void testFramesDecoded() {
+        ByteBuf buf = Unpooled.buffer();
+        for (int i = 0; i < 9; i++) {
+            buf.writeByte(i);
+        }
+        ByteBuf input = buf.duplicate();
 
+        EmbeddedChannel channel = new EmbeddedChannel(
+            new FrameChunkDecoder(3));
 
+        assertTrue(channel.writeInbound(input.readBytes(2)));
+        try {
+            channel.writeInbound(input.readBytes(4));
+            Assert.fail();
+        } catch (TooLongFrameException e) {
+            // expected exception
+        }
+        assertTrue(channel.writeInbound(input.readBytes(3)));
+        assertTrue(channel.finish());
 
+        // Read frames
+        ByteBuf read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.readSlice(2), read);
+        read.release();
+
+        read = (ByteBuf) channel.readInbound();
+        assertEquals(buf.skipBytes(4).readSlice(3), read);
+        read.release();
+        buf.release();
+    }
+}
+```
+# 编解码器框架
+## 解码器
+- 将字节解码为消息 -- ByteToMessageDecoder 和 ReplayingDecoder
+- 将一种消息类型解码为另一种 -- MessageToMessageDecoder
+
+解码器实现了ChannelInboundHandler
+### 抽象类ByteToMessageDecoder
+由于不知道远程节点是否会一次性发送完整的小i下，这个类会对入站数据进行缓冲。
+- decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) 该方法必须实现
+- decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) 当Channel的状态变为非活动是，该方法将调用一次，用于特殊的处理。
+
+每次读取int数据时都要判断是否有4字节可读，比较繁琐，ReplayingDecoder可以消除这个步骤
+#### 编解码器中的引用计数
+一旦消息被编码或者解码，它就会被ReferenceCountUtil.release(message)调用自动释放，如果需要保留引用，可以调用ReferenceCountUtil.retain(message)
+### 抽象类ReplayingDecoder
+```
+public class ToIntegerDecoder2 extends ReplayingDecoder<Void> {
+
+    @Override
+    public void decode(ChannelHandlerContext ctx, ByteBuf in,
+        List<Object> out) throws Exception {
+        out.add(in.readInt()); // 如果不够读，将抛出异常
+    }
+}
+```
+ReplayingDecoder慢于ByteToMessageDecoder，如果ByteToMessageDecoder不会引入太多复杂性，使用它。
+### 抽象类MessageToMessageDecoder
+```
+public class IntegerToStringDecoder extends
+    MessageToMessageDecoder<Integer> {
+    @Override
+    public void decode(ChannelHandlerContext ctx, Integer msg,
+        List<Object> out) throws Exception {
+        out.add(String.valueOf(msg));
+    }
+}
+```
+更复杂的例子，可以参考HttpObjectAggregator类
+### TooLongFraeException类
+当解码器缓冲大量的数据(帧超出指定的大小限制)以至于耗尽内存，将抛出异常。
+异常处理取决于解码器的用户，如HTTP可能返回一个特殊的响应，而其他情况下，唯一的选择可能是关闭对应的连接。
+如果在使用可变帧大小的协议，这个保护措施尤为重要。
+```
+public class SafeByteToMessageDecoder extends ByteToMessageDecoder {
+    private static final int MAX_FRAME_SIZE = 1024;
+    @Override
+    public void decode(ChannelHandlerContext ctx, ByteBuf in,
+        List<Object> out) throws Exception {
+            int readable = in.readableBytes();
+            if (readable > MAX_FRAME_SIZE) {
+                in.skipBytes(readable);
+                throw new TooLongFrameException("Frame too big!");
+        }
+        // do something
+        // ...
+    }
+}
+```
+## 编码器
+和解码器的功能正好相反
+### 抽象类MessageToByteEncoder
+该类只有一个方法，而不是像解码器一样有两个。原因是解码器通常需要在Channel关闭后产生最后一个消息(所以有了decod eLast()方法)，但这个场景对编码器无意义。
+下面代码将Short编码成ByteBuf的2字节
+```
+public class ShortToByteEncoder extends MessageToByteEncoder<Short> {
+    @Override
+    public void encode(ChannelHandlerContext ctx, Short msg, ByteBuf out)
+        throws Exception {
+        out.writeShort(msg);
+    }
+}
+```
+更复杂的例子，可以参考WebSocket08FrameEncoder类
+### 抽象类MessageToMessageEncoder
+关于有趣的MessageToMessageEncoder用法，可以参考ProtobufEncoder
+## 抽象的编解码器类
+同时实现ChannelInboundHandler和ChannelOutboundHandler接口
+尽可能将这两种功能分开，最大化代码的可用性
+### 抽象类ByteToMessageCodec
+它结合了ByteToMessageDecoder和MessageToByteEncoder
+任何协议都可以使用ByteToMessageCodec，如果SMTP编码器成字节，解码器成一个自定义的消息类型如SmtpRequest。在接收端，当响应被创建时，产生一个SmtpReponse，并编码字节返回。
+### 抽象类MessageToMessageCodec
 
 
 
