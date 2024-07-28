@@ -1571,6 +1571,515 @@ public class HttpCompressionInitializer extends ChannelInitializer<Channel> {
     }
 }
 ```
+如果使用的是JDK6或者更早的版本，需要将JZlib放入CLASSPATH中以支持压缩功能。
+```
+<dependency>
+	<groupId>com.jcraft</groupId>
+	<artifactId>jzlib</artifactId>
+	<version>1.1.3</version>
+</dependency>
+```
+### 使用HTTPS
+```
+public class HttpsCodecInitializer extends ChannelInitializer<Channel> {
+    private final SslContext context;
+    private final boolean isClient;
+
+    public HttpsCodecInitializer(SslContext context, boolean isClient) {
+        this.context = context;
+        this.isClient = isClient;
+    }
+
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        SSLEngine engine = context.newEngine(ch.alloc());
+        pipeline.addFirst("ssl", new SslHandler(engine));
+
+        if (isClient) {
+            pipeline.addLast("codec", new HttpClientCodec());
+        } else {
+            pipeline.addLast("codec", new HttpServerCodec());
+        }
+    }
+}
+```
+### WebSocket
+WebSocket提供了“在一个单个的TCP连接上提供双向的通信……结合WebSocket API……它为网页和远程服务器之间的双向通信提供了一种替代HTTP轮询的方案”
+WebSocket可以用于传输任意类型的数据，很像普通的套接字。
+示例代码中的类处理协议升级握手，以及3种控制帧——Close、Ping和Pong。Text和Binary数据帧会被传递给下一个ChannelHandler进行处理。
+```
+public class WebSocketServerInitializer extends ChannelInitializer<Channel> {
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ch.pipeline().addLast(
+            new HttpServerCodec(),
+            new HttpObjectAggregator(65536),
+            new WebSocketServerProtocolHandler("/websocket"),
+            new TextFrameHandler(),
+            new BinaryFrameHandler(),
+            new ContinuationFrameHandler());
+    }
+
+    public static final class TextFrameHandler extends
+        SimpleChannelInboundHandler<TextWebSocketFrame> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx,
+            TextWebSocketFrame msg) throws Exception {
+            // Handle text frame
+        }
+    }
+
+    public static final class BinaryFrameHandler extends
+        SimpleChannelInboundHandler<BinaryWebSocketFrame> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx,
+            BinaryWebSocketFrame msg) throws Exception {
+            // Handle binary frame
+        }
+    }
+
+    public static final class ContinuationFrameHandler extends
+        SimpleChannelInboundHandler<ContinuationWebSocketFrame> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx,
+            ContinuationWebSocketFrame msg) throws Exception {
+            // Handle continuation frame
+        }
+    }
+}
+```
+如果想为WebSocket添加安全性，需要将SslHandler作为第一个ChannelHandler添加到ChannelPipeline中。
+## 空闲的连接和超时
+|名称|描述|
+|:----:|:----:|
+|IdleStateHandler|当连接空闲时间太长时，触发一个IdleStateEvent事件。通过ChannelInboundHandler重写userEvent-Triggered()处理该事件|
+|ReadTimeoutHandler|如果在指定的时间间隔内没有收到入站数据，抛出一个ReadTimeoutException，并关闭Channel，通过ChannelHandler中的exceptionCaught()来检测该异常|
+|WriteTimeoutHandler|没有数据写入|
+
+发送心跳信息到远程节点，如果在60秒子内没有接受或者发送任何的数据，我们将得到通知；如果没有响应，我们将连接关闭。
+```
+public class IdleStateHandlerInitializer extends ChannelInitializer<Channel>
+    {
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(
+                new IdleStateHandler(0, 0, 60, TimeUnit.SECONDS)); // 如果连接超过60秒没有接受或者发送任何数据，使用一个IdelStateEvent事件
+        pipeline.addLast(new HeartbeatHandler()); // 检测IdleStateEvent事件
+    }
+
+    public static final class HeartbeatHandler
+        extends ChannelInboundHandlerAdapter {
+        private static final ByteBuf HEARTBEAT_SEQUENCE =
+                Unpooled.unreleasableBuffer(Unpooled.copiedBuffer(
+                "HEARTBEAT", CharsetUtil.ISO_8859_1));
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx,
+            Object evt) throws Exception {
+            if (evt instanceof IdleStateEvent) {
+                ctx.writeAndFlush(HEARTBEAT_SEQUENCE.duplicate()) // 发送心跳信息，并在发送失败时关闭该连接
+                     .addListener(
+                         ChannelFutureListener.CLOSE_ON_FAILURE);
+            } else {
+                super.userEventTriggered(ctx, evt);
+            }
+        }
+    }
+}
+```
+## 解码基于分隔符的协议和基于长度的协议
+### 基于分隔符的协议
+RFC文档正式定义的许多协议SMTP、POP3、IMAP以及Telnet都是这样的
+```
+public class LineBasedHandlerInitializer extends ChannelInitializer<Channel>
+    {
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new LineBasedFrameDecoder(64 * 1024)); // 提取帧
+        pipeline.addLast(new FrameHandler()); // 接受帧
+    }
+
+    public static final class FrameHandler
+        extends SimpleChannelInboundHandler<ByteBuf> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx,
+            ByteBuf msg) throws Exception { // 传入单个帧的内容
+            // Do something with the data extracted from the frame
+        }
+    }
+}
+```
+如果正在使用除了行尾符以外的分隔符分割的帧，以类似的方法使用DelimiterBasedFrameDecoder，只需要将特定的分隔符序列指定到其构造函数即可。
+作为示例，定义一下协议规范：
+- 每个帧由换行符分割
+- 每个帧由一系列的元素组成，没有元素由空格分隔
+- 一个帧的内容代表一个命令，定义为一个命令名称后跟着数目可变的参数
+
+由此我们自定义解码器类
+- Cmd 将帧(命令)的内容存储在ByteBuf中，一个ByteBuf用于名称，另一个用于参数
+- CmdDecoder 从被重写了的decode()方法中获取一行字符串，从它的内容构建一个Cmd的实例
+- CmdHandler 从CmdDecoder获取解码的Cmd对象，并对它进行一些处理
+- CmdHandlerInitializer 定义为专门的ChannelInitializer的嵌套类，并安装到ChannelPipeline中
+
+```
+public class CmdHandlerInitializer extends ChannelInitializer<Channel> {
+    private static final byte SPACE = (byte)' ';
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new CmdDecoder(64 * 1024)); // 提取Cmd对象并转发
+        pipeline.addLast(new CmdHandler()); // 处理Cmd对象
+    }
+
+    public static final class Cmd {
+        private final ByteBuf name;
+        private final ByteBuf args;
+
+        public Cmd(ByteBuf name, ByteBuf args) {
+            this.name = name;
+            this.args = args;
+        }
+
+        public ByteBuf name() {
+            return name;
+        }
+
+        public ByteBuf args() {
+            return args;
+        }
+    }
+
+    public static final class CmdDecoder extends LineBasedFrameDecoder {
+        public CmdDecoder(int maxLength) {
+            super(maxLength);
+        }
+
+        @Override
+        protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer)
+            throws Exception {
+            ByteBuf frame = (ByteBuf) super.decode(ctx, buffer); // 根据行尾符分割帧
+            if (frame == null) {
+                return null;
+            }
+            int index = frame.indexOf(frame.readerIndex(),
+                    frame.writerIndex(), SPACE); // 查找第一个空格字符的索引 前面时命令名称
+            return new Cmd(frame.slice(frame.readerIndex(), index),
+                    frame.slice(index + 1, frame.writerIndex()));
+        }
+    }
+
+    public static final class CmdHandler
+        extends SimpleChannelInboundHandler<Cmd> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx, Cmd msg)
+            throws Exception {
+            // Do something with the command
+        }
+    }
+}
+```
+### 基于长度的协议
+FixedLengthFrameDecoder 固定长度帧
+LengthFieldBasedFrameDecoder 根据头部长度值提取帧
+```
+public class LengthBasedInitializer extends ChannelInitializer<Channel> {
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(
+                new LengthFieldBasedFrameDecoder(64 * 1024, 0, 8)); // 解码将帧长度编码到帧起始的前8个字节
+        pipeline.addLast(new FrameHandler());
+    }
+
+    public static final class FrameHandler
+        extends SimpleChannelInboundHandler<ByteBuf> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx,
+             ByteBuf msg) throws Exception {
+            // Do something with the frame
+        }
+    }
+}
+```
+## 写大型数据
+由于写操作是非阻塞的，所以即使没有写出所有的数据，写操作也会在完成时返回并通知ChannelFuture。当这种情况发生时，如果仍然不停地写入，就有内存耗尽的风险。所以在写大型数据时，需要准备处理到远程节点的连接是慢速连接的情况，这种情况会导致内存释放的延迟。
+在Netty应用程序中，需要做的就是使用一个FileRegion接口的实现
+```
+public class FileRegionWriteHandler extends ChannelInboundHandlerAdapter {
+    private static final Channel CHANNEL_FROM_SOMEWHERE = new NioSocketChannel();
+    private static final File FILE_FROM_SOMEWHERE = new File("");
+
+    @Override
+    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+        File file = FILE_FROM_SOMEWHERE; //get reference from somewhere
+        Channel channel = CHANNEL_FROM_SOMEWHERE; //get reference from somewhere
+        //...
+        FileInputStream in = new FileInputStream(file);
+        FileRegion region = new DefaultFileRegion(
+                in.getChannel(), 0, file.length());
+        channel.writeAndFlush(region).addListener(
+            new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future)
+               throws Exception {
+               if (!future.isSuccess()) {
+                   Throwable cause = future.cause();
+                   // Do something
+               }
+            }
+        });
+    }
+}
+```
+该示例只适用于文件内容的直接传输，不包括应用程序对数据的任何处理。在需要将数据从文件系统复制到用户内存中时，可以使用ChunkedWriteHandler，它支持异步写大型数据流，而又不会导致大量的内存消耗。
+下列所示代码使用一个File以及一个SslContext进行实例化。当initChannel()方法被调用时，它将使用所示的ChannelHandler链初始化该Channel。
+当Channel的状态变为活动时，WriteStreamHandler将会逐块地把来自文件中的数据作为ChunkedStream写入。数据在传输之前将会由SslHandler加密。
+```
+public class ChunkedWriteHandlerInitializer
+    extends ChannelInitializer<Channel> {
+    private final File file;
+    private final SslContext sslCtx;
+    public ChunkedWriteHandlerInitializer(File file, SslContext sslCtx) {
+        this.file = file;
+        this.sslCtx = sslCtx;
+    }
+
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new SslHandler(sslCtx.newEngine(ch.alloc())));
+        pipeline.addLast(new ChunkedWriteHandler()); // 要使用自己的ChunkedInput实现，需要在ChannelPipeline中安装一个ChunkedWriteHandler
+        pipeline.addLast(new WriteStreamHandler()); // 一旦连接建立，开始写文件
+    }
+
+    public final class WriteStreamHandler
+        extends ChannelInboundHandlerAdapter {
+
+        @Override
+        public void channelActive(ChannelHandlerContext ctx)
+            throws Exception {
+            super.channelActive(ctx);
+            ctx.writeAndFlush(
+            new ChunkedStream(new FileInputStream(file)));
+        }
+    }
+}
+```
+## 序列化数据
+### JDK序列化
+Netty提供了用于和JDK进行操作的序列化类
+### 使用JBoss Marshalling进行序列化
+比JDK快3倍，而且更紧凑。
+```
+public class MarshallingInitializer extends ChannelInitializer<Channel> {
+    private final MarshallerProvider marshallerProvider;
+    private final UnmarshallerProvider unmarshallerProvider;
+
+    public MarshallingInitializer(
+            UnmarshallerProvider unmarshallerProvider,
+            MarshallerProvider marshallerProvider) {
+        this.marshallerProvider = marshallerProvider;
+        this.unmarshallerProvider = unmarshallerProvider;
+    }
+
+    @Override
+    protected void initChannel(Channel channel) throws Exception {
+        ChannelPipeline pipeline = channel.pipeline();
+        pipeline.addLast(new MarshallingDecoder(unmarshallerProvider));
+        pipeline.addLast(new MarshallingEncoder(marshallerProvider));
+        pipeline.addLast(new ObjectHandler());
+    }
+
+    public static final class ObjectHandler
+        extends SimpleChannelInboundHandler<Serializable> {
+        @Override
+        public void channelRead0(
+            ChannelHandlerContext channelHandlerContext,
+            Serializable serializable) throws Exception {
+            // Do something
+        }
+    }
+}
+```
+### 通过Protocol Buffers序列化
+```
+public class ProtoBufInitializer extends ChannelInitializer<Channel> {
+    private final MessageLite lite;
+
+    public ProtoBufInitializer(MessageLite lite) {
+        this.lite = lite;
+    }
+
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new ProtobufVarint32FrameDecoder());
+        pipeline.addLast(new ProtobufEncoder());
+        pipeline.addLast(new ProtobufDecoder(lite));
+        pipeline.addLast(new ObjectHandler());
+    }
+
+    public static final class ObjectHandler
+        extends SimpleChannelInboundHandler<Object> {
+        @Override
+        public void channelRead0(ChannelHandlerContext ctx, Object msg)
+            throws Exception {
+            // Do something with the object
+        }
+    }
+}
+```
+# WebSocket
+实时Web并不是所谓的硬实时服务质量(QoS)，Qos是保证计算结果将在指定的时间间隔内被提交。仅HTTP的请求响应模式设计就使其难以被支持。
+实时Web使用户在信息的作者发布信息之后能够立即收到信息，而不需要他们周期性地检查信息源以获得更新。
+## WebSocket示例应用程序
+- 客户端发送一个消息
+- 该消息被广播到所有其他连接的客户端
+
+## 添加WebSocket支持
+### 处理HTTP请求
+```
+public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+    private final String wsUri;
+    private static final File INDEX;
+
+    static {
+        URL location = HttpRequestHandler.class
+             .getProtectionDomain()
+             .getCodeSource().getLocation();
+        try {
+            String path = location.toURI() + "index.html";
+            path = !path.contains("file:") ? path : path.substring(5);
+            INDEX = new File(path);
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(
+                 "Unable to locate index.html", e);
+        }
+    }
+
+    public HttpRequestHandler(String wsUri) {
+        this.wsUri = wsUri;
+    }
+
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx,
+        FullHttpRequest request) throws Exception {
+        if (wsUri.equalsIgnoreCase(request.getUri())) {
+            ctx.fireChannelRead(request.retain()); // WebSocket协议升级
+        } else {
+            if (HttpHeaders.is100ContinueExpected(request)) {
+                send100Continue(ctx); // 处理 100 continue 请求 以符合HTTP1.1 规则
+            }
+            RandomAccessFile file = new RandomAccessFile(INDEX, "r"); // 读取index.html
+            HttpResponse response = new DefaultHttpResponse(
+                request.getProtocolVersion(), HttpResponseStatus.OK);
+            response.headers().set(
+                HttpHeaders.Names.CONTENT_TYPE,
+                "text/html; charset=UTF-8");
+            boolean keepAlive = HttpHeaders.isKeepAlive(request);
+            if (keepAlive) {
+                response.headers().set(
+                    HttpHeaders.Names.CONTENT_LENGTH, file.length());
+                response.headers().set( HttpHeaders.Names.CONNECTION,
+                    HttpHeaders.Values.KEEP_ALIVE);
+            }
+            ctx.write(response);
+            if (ctx.pipeline().get(SslHandler.class) == null) {
+                ctx.write(new DefaultFileRegion( // 将index.html写入客户端
+                    file.getChannel(), 0, file.length()));
+            } else {
+                ctx.write(new ChunkedNioFile(file.getChannel()));
+            }
+            ChannelFuture future = ctx.writeAndFlush(
+                LastHttpContent.EMPTY_LAST_CONTENT); // 写LastHttpContent并冲刷至客户端
+            if (!keepAlive) {
+                future.addListener(ChannelFutureListener.CLOSE);
+            }
+        }
+    }
+
+    private static void send100Continue(ChannelHandlerContext ctx) {
+        FullHttpResponse response = new DefaultFullHttpResponse(
+            HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE);
+        ctx.writeAndFlush(response);
+    }
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
+        throws Exception {
+        cause.printStackTrace();
+        ctx.close();
+    }
+}
+```
+需要调用FullHttpRequest的retain()方法，是因为调用channelRead()方法完成后，它将调用FullHttpRequest对象上的release()方法以释放它的资源。
+如果客户端发送HTTP 1.1的头信息，那么HttpRequestHandler将会发送一个100 Continue响应。在该HTTP头信息设置之后，HttpRequestHandler回写一个HttpResponse给客户端。这不是一个FullHttpResponse，因为它只是响应的第一个部分。这里就不会调用writeAndFlush()方法，在结束的时候才会调用。
+如果不需要加密和压缩，那么可以通过将index.html的内容存储到DefaultFileRegion中来达到最佳效果。它会利用零拷贝的特性来进行内容的传输。
+HttpRequestHandler将写一个LastHttpContent来标记响应的结束。如果没有请求keep-alive，将添加ChannelFutureListener到最后一次写出动作的ChannelFuture，并关闭该连接。你将调用writeAndFlush()方法以冲刷所有之前写入的消息。
+### 处理WebSocket帧
+一个完整的消息可能包含许多帧
+Netty提供了WebSocketServerProtocolHandler来处理其他类型的帧
+```
+public class TextWebSocketFrameHandler
+    extends SimpleChannelInboundHandler<TextWebSocketFrame> {
+    private final ChannelGroup group;
+
+    public TextWebSocketFrameHandler(ChannelGroup group) {
+        this.group = group;
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx,
+        Object evt) throws Exception {
+        if (evt == WebSocketServerProtocolHandler
+             .ServerHandshakeStateEvent.HANDSHAKE_COMPLETE) {
+            ctx.pipeline().remove(HttpRequestHandler.class); // 如果该事件表示握手成功，则从该ChannelPiepeline移除
+            group.writeAndFlush(new TextWebSocketFrame(
+                    "Client " + ctx.channel() + " joined")); // 通知所有已连接的WebSocket客户端新的客户端
+            group.add(ctx.channel()); // 将新的WebSocket Channel添加到ChannelGroup
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
+
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx,
+        TextWebSocketFrame msg) throws Exception {
+        group.writeAndFlush(msg.retain()); // 增加消息的引用计数
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
