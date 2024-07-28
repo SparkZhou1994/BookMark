@@ -1364,12 +1364,213 @@ public class ShortToByteEncoder extends MessageToByteEncoder<Short> {
 它结合了ByteToMessageDecoder和MessageToByteEncoder
 任何协议都可以使用ByteToMessageCodec，如果SMTP编码器成字节，解码器成一个自定义的消息类型如SmtpRequest。在接收端，当响应被创建时，产生一个SmtpReponse，并编码字节返回。
 ### 抽象类MessageToMessageCodec
+```
+public class WebSocketConvertHandler extends
+     MessageToMessageCodec<WebSocketFrame,
+     WebSocketConvertHandler.MyWebSocketFrame> {
+     @Override
+     protected void encode(ChannelHandlerContext ctx,
+         WebSocketConvertHandler.MyWebSocketFrame msg,
+         List<Object> out) throws Exception {
+         ByteBuf payload = msg.getData().duplicate().retain();
+         switch (msg.getType()) {
+             case BINARY:
+                 out.add(new BinaryWebSocketFrame(payload));
+                 break;
+             case TEXT:
+                 out.add(new TextWebSocketFrame(payload));
+                 break;
+             case CLOSE:
+                 out.add(new CloseWebSocketFrame(true, 0, payload));
+                 break;
+             case CONTINUATION:
+                 out.add(new ContinuationWebSocketFrame(payload));
+                 break;
+             case PONG:
+                 out.add(new PongWebSocketFrame(payload));
+                 break;
+             case PING:
+                 out.add(new PingWebSocketFrame(payload));
+                 break;
+             default:
+                 throw new IllegalStateException(
+                     "Unsupported websocket msg " + msg);}
+    }
 
+    @Override
+    protected void decode(ChannelHandlerContext ctx, WebSocketFrame msg,
+        List<Object> out) throws Exception {
+        ByteBuf payload = msg.content().duplicate().retain();
+        if (msg instanceof BinaryWebSocketFrame) {
+            out.add(new MyWebSocketFrame(
+                    MyWebSocketFrame.FrameType.BINARY, payload));
+        } else
+        if (msg instanceof CloseWebSocketFrame) {
+            out.add(new MyWebSocketFrame (
+                    MyWebSocketFrame.FrameType.CLOSE, payload));
+        } else
+        if (msg instanceof PingWebSocketFrame) {
+            out.add(new MyWebSocketFrame (
+                    MyWebSocketFrame.FrameType.PING, payload));
+        } else
+        if (msg instanceof PongWebSocketFrame) {
+            out.add(new MyWebSocketFrame (
+                    MyWebSocketFrame.FrameType.PONG, payload));
+        } else
+        if (msg instanceof TextWebSocketFrame) {
+            out.add(new MyWebSocketFrame (
+                    MyWebSocketFrame.FrameType.TEXT, payload));
+        } else
+        if (msg instanceof ContinuationWebSocketFrame) {
+            out.add(new MyWebSocketFrame (
+                    MyWebSocketFrame.FrameType.CONTINUATION, payload));
+        } else
+        {
+            throw new IllegalStateException(
+                    "Unsupported websocket msg " + msg);
+        }
+    }
 
+    public static final class MyWebSocketFrame {
+        public enum FrameType {
+            BINARY,
+            CLOSE,
+            PING,
+            PONG,
+            TEXT,
+            CONTINUATION
+        }
+        private final FrameType type;
+        private final ByteBuf data;
 
+        public MyWebSocketFrame(FrameType type, ByteBuf data) {
+            this.type = type;
+            this.data = data;
+        }
+        public FrameType getType() {
+            return type;
+        }
+        public ByteBuf getData() {
+            return data;
+        }
+    }
+}
+```
+### CombinedChannelDuplexHandler类
+结合一个解码器和编码器会对可重用性造成影响，但是CombinedChannelDuplexHandler提供了这个解决方案
+```
+public class CombinedByteCharCodec extends
+    CombinedChannelDuplexHandler<ByteToCharDecoder /* extends ByteToMessageDecoder*/, CharToByteEncoder /*MessageToByteEncoder*/> {
+    public CombinedByteCharCodec() {
+        super(new ByteToCharDecoder(), new CharToByteEncoder());
+    }
+}
+```
+# 预置的ChannelHandler和编解码器
+## 通过SSL/TLS保护Netty应用程序
+为了支持SSL/TLS，Java提供了javax.net.ssl包，它的SSLContext和SSLEngine类使得实现解密和加密相当简单直接。Netty通过一个名为SslHandler的ChannelHandler实现利用了这个API，其中SslHandler在内部使用SSLEngine来完成实际的工作。
+Netty还提供了使用OpenSSL工具包的SSLEngine实现。这个OpenSslEngine提供了比JDK更好的性能。
+如果OpenSSL库可用，Netty默认使用OpenSslEngine，无论使用哪个实现，其API和数据流都是一致的。
+```
+public class SslChannelInitializer extends ChannelInitializer<Channel> { //ChannelInitializer用于在Channel注册好时设置ChannelPipeline
+    private final SslContext context;
+    private final boolean startTls;
 
+    public SslChannelInitializer(SslContext context,
+        boolean startTls) {
+        this.context = context;
+        this.startTls = startTls;
+    }
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        SSLEngine engine = context.newEngine(ch.alloc());
+        ch.pipeline().addFirst("ssl",
+            new SslHandler(engine, startTls)); //作为第一个ChannelHandler
+    }
+}
+```
+大多数情况下，SslHandler是ChannelPipeline第一个ChannelHandler，这确保了其他Handler将数据处理后，才进行加密。
+SslHandler具有一些方法，如在握手阶段，两个节点将相互验证并且商定一直加密方式。可通过配置SslHandler来修改它的行为，或者在SSL/TLS握手一旦完成之后提供通知，握手阶段完成之后，所有数据都将被加密。SSL/TLS握手将会自动执行。
+## 构建基于Netty的HTTP/HTTPS应用程序
+### HTTP解码器、编码器和编解码器
+一个HTTP请求/响应可能由多个数据部分组成，它总是以一个LastHttpContent作为结束。FullHttpRequest和FullHttpResponse是特色的子类，代表完整的请求和响应。
+```
+public class HttpPipelineInitializer extends ChannelInitializer<Channel> {
+    private final boolean client;
 
+    public HttpPipelineInitializer(boolean client) {
+        this.client = client;
+    }
 
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        if (client) {
+            pipeline.addLast("decoder", new HttpResponseDecoder());
+            pipeline.addLast("encoder", new HttpRequestEncoder());
+        } else {
+            pipeline.addLast("decoder", new HttpRequestDecoder());
+            pipeline.addLast("encoder", new HttpResponseEncoder());
+        }
+    }
+}
+```
+### 聚合HTTP信息
+由于HTTP的请求和响应可能由许多部分组成，需要聚合它们以形成完整的消息。Netty提供了一个聚合器，将多个消息部分合并成FullHttpRequest或者FullHttpResponse消息。
+由于消息分段需要被缓冲，直到可以转发一个完整的消息给下一个Handler,所以会有一些开销，但好处是你不必关心消息碎片了。
+引入这种自动聚合机制只是添加另一个ChannelHandler罢了。
+```
+public class HttpAggregatorInitializer extends ChannelInitializer<Channel> {
+    private final boolean isClient;
+
+    public HttpAggregatorInitializer(boolean isClient) {
+        this.isClient = isClient;
+    }
+
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        if (isClient) {
+            pipeline.addLast("codec", new HttpClientCodec());
+        } else {
+            pipeline.addLast("codec", new HttpServerCodec());
+        }
+        pipeline.addLast("aggregator",
+                new HttpObjectAggregator(512 * 1024));
+    }
+}
+```
+### HTTP压缩
+对于文本数据通常建议进行压缩
+Netty支持gzip和deflate编码
+HTTP请求头提供所支持的压缩格式
+```
+Accept-Encoding: gzip,deflate
+```
+服务器没有义务压缩它所发送的数据
+```
+public class HttpCompressionInitializer extends ChannelInitializer<Channel> {
+    private final boolean isClient;
+
+    public HttpCompressionInitializer(boolean isClient) {
+        this.isClient = isClient;
+    }
+
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        if (isClient) {
+            pipeline.addLast("codec", new HttpClientCodec());
+            pipeline.addLast("decompressor",
+            new HttpContentDecompressor());
+        } else {
+            pipeline.addLast("codec", new HttpServerCodec());
+            pipeline.addLast("compressor",
+            new HttpContentCompressor());
+        }
+    }
+}
+```
 
 
 
