@@ -2050,12 +2050,335 @@ public class TextWebSocketFrameHandler
     }
 }
 ```
+对于retain()方法的调用是必需的，因为当channelRead0()方法返回时，TextWebSocketFrame的引用计数将会被减少。由于所有的操作都是异步的，因此，writeAndFlush()方法可能会在CchannelRead0()方法返回之后完成，而且它绝对不能访问一个已经失效的引用。
+### 初始化ChannelPipeline
+```
+public class ChatServerInitializer extends ChannelInitializer<Channel> {
+    private final ChannelGroup group;
 
+    public ChatServerInitializer(ChannelGroup group) {
+        this.group = group;
+    }
 
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new HttpServerCodec());
+        pipeline.addLast(new ChunkedWriteHandler());
+        pipeline.addLast(new HttpObjectAggregator(64 * 1024));
+        pipeline.addLast(new HttpRequestHandler("/ws"));
+        pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
+        pipeline.addLast(new TextWebSocketFrameHandler(group));
+    }
+}
+```
+WebSocketServerProtocolHandler处理了所有委托管理的WebSocket帧类型以及升级握手本身。如果握手成功，那么所需的ChannelHandler将会被添加到ChannelPipeline中，而那些不再需要的ChannelHandler将被移除。
+当WebSocket协议升级完成之后，WebSocketServerProtocolHandler将会把HttpRequestDecoder替换成WebSocketFrameDecoder。为了性能最大化，它将移除任何不再被WebSocket连接所需要的ChannelHandler。包括了HttpObjectAggregator和HttpRequest-Handler。
+### 引导
+```
+public class ChatServer {
+    private final ChannelGroup channelGroup =
+        new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
+    private final EventLoopGroup group = new NioEventLoopGroup();
+    private Channel channel;
 
+    public ChannelFuture start(InetSocketAddress address) {
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.group(group)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(createInitializer(channelGroup));
+        ChannelFuture future = bootstrap.bind(address);
+        future.syncUninterruptibly();
+        channel = future.channel();
+        return future;
+    }
 
+    protected ChannelInitializer<Channel> createInitializer(
+        ChannelGroup group) {
+        return new ChatServerInitializer(group);
+    }
 
+    public void destroy() {
+        if (channel != null) {
+            channel.close();
+        }
+        channelGroup.close();
+        group.shutdownGracefully();
+    }
 
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
+            System.err.println("Please give port as argument");
+            System.exit(1);
+        }
+        int port = Integer.parseInt(args[0]);
+        final ChatServer endpoint = new ChatServer();
+        ChannelFuture future = endpoint.start(
+                new InetSocketAddress(port));
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                endpoint.destroy();
+            }
+        });
+        future.channel().closeFuture().syncUninterruptibly();
+    }
+}
+```
+## 如何进行加密
+通过扩展ChantServerInitializer来创建一个SecureChatServerInitializer来完成这个需求
+```
+public class SecureChatServerInitializer extends ChatServerInitializer {
+    private final SslContext context;
+
+    public SecureChatServerInitializer(ChannelGroup group,
+        SslContext context) {
+        super(group);
+        this.context = context;
+    }
+
+    @Override
+    protected void initChannel(Channel ch) throws Exception {
+        super.initChannel(ch);
+        SSLEngine engine = context.newEngine(ch.alloc());
+        engine.setUseClientMode(false);
+        ch.pipeline().addFirst(new SslHandler(engine));
+    }
+}
+
+public class SecureChatServer extends ChatServer {
+    private final SslContext context;
+
+    public SecureChatServer(SslContext context) {
+        this.context = context;
+    }
+
+    @Override
+    protected ChannelInitializer<Channel> createInitializer(
+        ChannelGroup group) {
+        return new SecureChatServerInitializer(group, context);
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
+            System.err.println("Please give port as argument");
+            System.exit(1);
+        }
+        int port = Integer.parseInt(args[0]);
+        SelfSignedCertificate cert = new SelfSignedCertificate();
+        SslContext context = SslContext.newServerContext(
+                cert.certificate(), cert.privateKey());
+        final SecureChatServer endpoint = new SecureChatServer(context);
+        ChannelFuture future = endpoint.start(new InetSocketAddress(port));
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                endpoint.destroy();
+            }
+        });
+        future.channel().closeFuture().syncUninterruptibly();
+    }
+}
+```
+# 使用UDP广播事件
+## UDP示例应用程序
+在不安全的环境中并不倾向于使用UDP广播，路由器通常也会阻止广播消息。
+## 消息POJO: LogEvent
+```
+public final class LogEvent {
+    public static final byte SEPARATOR = (byte) ':';
+    private final InetSocketAddress source;
+    private final String logfile;
+    private final String msg;
+    private final long received;
+}
+```
+## 编写广播者
+DatagramPacket是一个简单的消息容器，DatagramChannel实现用它来和远程节点通信。
+要将LogEvent消息转换成DatagramPacket，我们将需要一个编码器。只需拓展MessageToMessageEncoder。
+```
+public class LogEventEncoder extends MessageToMessageEncoder<LogEvent> {
+    private final InetSocketAddress remoteAddress;
+
+    public LogEventEncoder(InetSocketAddress remoteAddress) {
+        this.remoteAddress = remoteAddress;
+    }
+
+    @Override
+    protected void encode(ChannelHandlerContext channelHandlerContext,
+        LogEvent logEvent, List<Object> out) throws Exception {
+        byte[] file = logEvent.getLogfile().getBytes(CharsetUtil.UTF_8);
+        byte[] msg = logEvent.getMsg().getBytes(CharsetUtil.UTF_8);
+        ByteBuf buf = channelHandlerContext.alloc()
+            .buffer(file.length + msg.length + 1);
+        buf.writeBytes(file); // 将文件名写入ByteBuf中
+        buf.writeByte(LogEvent.SEPARATOR); // 添加一个SEPARATOR
+        buf.writeBytes(msg); // 将日志消息写入ByteBuf中
+        out.add(new DatagramPacket(buf, remoteAddress));
+    }
+}
+
+public class LogEventBroadcaster {
+    private final EventLoopGroup group;
+    private final Bootstrap bootstrap;
+    private final File file;
+
+    public LogEventBroadcaster(InetSocketAddress address, File file) {
+        group = new NioEventLoopGroup();
+        bootstrap = new Bootstrap();
+        bootstrap.group(group).channel(NioDatagramChannel.class) // 引导该NioDatagramChannelcc 无连接
+             .option(ChannelOption.SO_BROADCAST, true) // 设置SO_BROADCAST套接字选项
+             .handler(new LogEventEncoder(address));
+        this.file = file;
+    }
+
+    public void run() throws Exception {
+        Channel ch = bootstrap.bind(0).sync().channel();
+        long pointer = 0;
+        for (;;) { // 启动主动处理循环
+            long len = file.length();
+            if (len < pointer) {
+                // file was reset
+                pointer = len; // 如果有必要，将文件指针设置到该文件的最后一个字节
+            } else if (len > pointer) {
+                // Content was added
+                RandomAccessFile raf = new RandomAccessFile(file, "r");
+                raf.seek(pointer); // 设置当前的文件指针，以确保没有任何的旧日志被发送
+                String line;
+                while ((line = raf.readLine()) != null) {
+                    ch.writeAndFlush(new LogEvent(null, -1,
+                    file.getAbsolutePath(), line)); // 对于每个日志条目，写入一个LogEvent到Channel
+                }
+                pointer = raf.getFilePointer(); // 存储其在文件中的当前位置
+                raf.close();
+            }
+            try {
+                Thread.sleep(1000); // 休眠1秒，如果被中断，则退出循环，否则重新处理它
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+                break;
+            }
+        }
+    }
+
+    public void stop() {
+        group.shutdownGracefully();
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length != 2) {
+            throw new IllegalArgumentException();
+        }
+        LogEventBroadcaster broadcaster = new LogEventBroadcaster(
+                new InetSocketAddress("255.255.255.255",
+                    Integer.parseInt(args[0])), new File(args[1]));
+        try {
+            broadcaster.run();
+        }
+        finally {
+            broadcaster.stop();
+        }
+    }
+}
+```
+对于初始测试，可以使用netcat程序，用来监听某个指定的端口，并打印到标准输出.
+```
+# 监听UDP 9999端口数据
+nc -l -u -p 9999
+```
+## 编写监视器
+```
+public class LogEventDecoder extends MessageToMessageDecoder<DatagramPacket> {
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx,
+        DatagramPacket datagramPacket, List<Object> out)
+        throws Exception {
+        ByteBuf data = datagramPacket.content();
+        int idx = data.indexOf(0, data.readableBytes(),
+            LogEvent.SEPARATOR);
+        String filename = data.slice(0, idx)
+            .toString(CharsetUtil.UTF_8);
+        String logMsg = data.slice(idx + 1,
+            data.readableBytes()).toString(CharsetUtil.UTF_8);
+        LogEvent event = new LogEvent(datagramPacket.sender(),
+            System.currentTimeMillis(), filename, logMsg);
+        out.add(event);
+    }
+}
+
+public class LogEventHandler
+    extends SimpleChannelInboundHandler<LogEvent> {
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx,
+        Throwable cause) throws Exception {
+        cause.printStackTrace();
+        ctx.close();
+    }
+
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx,
+        LogEvent event) throws Exception {
+        StringBuilder builder = new StringBuilder();
+        builder.append(event.getReceivedTimestamp());
+        builder.append(" [");
+        builder.append(event.getSource().toString());
+        builder.append("] [");
+        builder.append(event.getLogfile());
+        builder.append("] : ");
+        builder.append(event.getMsg());
+        System.out.println(builder.toString());
+    }
+}
+
+public class LogEventMonitor {
+    private final EventLoopGroup group;
+    private final Bootstrap bootstrap;
+
+    public LogEventMonitor(InetSocketAddress address) {
+        group = new NioEventLoopGroup();
+        bootstrap = new Bootstrap();
+        bootstrap.group(group)
+            .channel(NioDatagramChannel.class)
+            .option(ChannelOption.SO_BROADCAST, true)
+            .handler( new ChannelInitializer<Channel>() {
+                @Override
+                protected void initChannel(Channel channel)
+                    throws Exception {
+                    ChannelPipeline pipeline = channel.pipeline();
+                    pipeline.addLast(new LogEventDecoder());
+                    pipeline.addLast(new LogEventHandler());
+                }
+            } )
+            .localAddress(address);
+    }
+
+    public Channel bind() {
+        return bootstrap.bind().syncUninterruptibly().channel();
+    }
+
+    public void stop() {
+        group.shutdownGracefully();
+    }
+
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
+            throw new IllegalArgumentException(
+            "Usage: LogEventMonitor <port>");
+        }
+        LogEventMonitor monitor = new LogEventMonitor(
+            new InetSocketAddress(Integer.parseInt(args[0])));
+        try {
+            Channel channel = monitor.bind();
+            System.out.println("LogEventMonitor running");
+            channel.closeFuture().sync();
+        } finally {
+            monitor.stop();
+        }
+    }
+}
+```
 
 
 
