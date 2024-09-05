@@ -518,12 +518,168 @@ func main() {
 继承：通过匿名字段实现
 多态：通过接口实现
 ## 匿名组合
+### 匿名字段
+```
+//人
+type Person struct {
+    name string
+    sex  byte
+    age  int
+}
 
+//学生
+type Student struct {
+    Person // 匿名字段，那么默认Student就包含了Person的所有字段
+    id     int
+    addr   string
+    name   string //和Person中的name同名
+}
 
+func main() {
+    //顺序初始化
+    s1 := Student{Person{"mike", 'm', 18}, 1, "sz"}
+    //s1 = {Person:{name:mike sex:109 age:18} id:1 addr:sz}
+    fmt.Printf("s1 = %+v\n", s1)
 
+    //s2 := Student{"mike", 'm', 18, 1, "sz"} //err
 
+    //部分成员初始化2
+    s4 := Student{Person: Person{name: "tom"}, id: 3}
+    //s4 = {Person:{name:tom sex:0 age:0} id:3 addr:}
+    fmt.Printf("s4 = %+v\n", s4)
 
+    //给Student的name
+    s.name = "mike"
+    //默认只会给最外层的成员赋值
+    //给匿名同名成员赋值，需要显示调用
+    s.Person.name = "yoyo"
+}
+```
+### 其它匿名字段
+#### 自定义类型
+```
+type mystr string //自定义类型
 
+type Person struct {
+    name string
+    sex  byte
+    age  int
+}
+
+type Student struct {
+    Person // 匿名字段，结构体类型
+    int     // 匿名字段，内置类型
+    mystr   // 匿名字段，自定义类型
+}
+
+func main() {
+    //初始化
+    s1 := Student{Person{"mike", 'm', 18}, 1, "bj"}
+
+    //{Person:{name:mike sex:109 age:18} int:1 mystr:bj}
+    fmt.Printf("%+v\n", s1)
+
+    //成员的操作，打印结果：mike, m, 18, 1, bj
+    fmt.Printf("%s, %c, %d, %d, %s\n", s1.name, s1.sex, s1.age, s1.int, s1.mystr)
+}
+```
+#### 结构体指针类型
+```
+type Person struct { //人
+    name string
+    sex  byte
+    age  int
+}
+
+type Student struct { //学生
+    *Person // 匿名字段，结构体指针类型
+    id      int
+    addr    string
+}
+
+func main() {
+    //初始化
+    s1 := Student{&Person{"mike", 'm', 18}, 1, "bj"}
+
+    //{Person:0xc0420023e0 id:1 addr:bj}
+    fmt.Printf("%+v\n", s1)
+    //mike, m, 18
+    fmt.Printf("%s, %c, %d\n", s1.name, s1.sex, s1.age)
+
+    //声明变量
+    var s2 Student
+    s2.Person = new(Person) //分配空间
+    s2.name = "yoyo"
+    s2.sex = 'f'
+    s2.age = 20
+
+    s2.id = 2
+    s2.addr = "sz"
+
+    //yoyo 102 20 2 20
+    fmt.Println(s2.name, s2.sex, s2.age, s2.id, s2.age)
+}
+```
+## 方法
+在这个对象中会包含一些函数，这种带有接收者的函数，我们称为方法(method)。
+### 为类型添加方法
+#### 为类型添加方法
+```
+//在函数定义时，在其名字之前放上一个变量，即是一个方法
+type MyInt int //自定义类型，给int改名为MyInt
+
+func (a MyInt) Add(b MyInt) MyInt { //面向对象
+    return a + b
+}
+
+func main() {
+    var a MyInt = 1
+    var b MyInt = 1
+
+    //调用func (a MyInt) Add(b MyInt)
+    fmt.Println("a.Add(b) = ", a.Add(b)) //a.Add(b) =  2
+}
+```
+#### 值语义和引用语义
+```
+type Person struct {
+    name string
+    sex  byte
+    age  int
+}
+
+//指针作为接收者，引用语义
+func (p *Person) SetInfoPointer() {
+    //给成员赋值
+    (*p).name = "yoyo"
+    p.sex = 'f'
+    p.age = 22
+}
+
+//值作为接收者，值语义
+func (p Person) SetInfoValue() {
+    //给成员赋值
+    p.name = "yoyo"
+    p.sex = 'f'
+    p.age = 22
+}
+
+func main() {
+    //指针作为接收者，引用语义
+    p1 := Person{"mike", 'm', 18} //初始化
+    fmt.Println("函数调用前 = ", p1)   //函数调用前 =  {mike 109 18}
+    (&p1).SetInfoPointer()
+    fmt.Println("函数调用后 = ", p1) //函数调用后 =  {yoyo 102 22}
+
+    fmt.Println("==========================")
+
+    p2 := Person{"mike", 'm', 18} //初始化
+    //值作为接收者，值语义
+    fmt.Println("函数调用前 = ", p2) //函数调用前 =  {mike 109 18}
+    p2.SetInfoValue()
+    fmt.Println("函数调用后 = ", p2) //函数调用后 =  {mike 109 18}
+}
+```
 
 
 
