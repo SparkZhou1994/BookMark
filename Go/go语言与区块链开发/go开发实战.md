@@ -680,8 +680,32 @@ func main() {
     fmt.Println("函数调用后 = ", p2) //函数调用后 =  {mike 109 18}
 }
 ```
+### 方法集
+#### 类型 *T 方法集
+如果在指针上调用一个接受值的方法，Go语言会聪明地将该指针解引用，并将指针所指的底层值作为方法的接收者。
+```
+//指针作为接收者，引用语义
+func (p *Person) SetInfoPointer() {
+    (*p).name = "yoyo"
+    p.sex = 'f'
+    p.age = 22
+}
+//值作为接收者，值语义
+func (p Person) SetInfoValue() {
+    p.name = "xxx"
+    p.sex = 'm'
+    p.age = 33
+}
+func main() {
+    //p 为指针类型
+    var p *Person = &Person{"mike", 'm', 18}
+    p.SetInfoPointer() //func (p) SetInfoPointer()
+    p.SetInfoValue()    //func (*p) SetInfoValue()
+    (*p).SetInfoValue() //func (*p) SetInfoValue()
+}
+```
 
-
+#### 类型 T 方法集
 
 
 
