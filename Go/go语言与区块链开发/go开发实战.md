@@ -683,6 +683,9 @@ func main() {
 ### 方法集
 #### 类型 *T 方法集
 如果在指针上调用一个接受值的方法，Go语言会聪明地将该指针解引用，并将指针所指的底层值作为方法的接收者。
+
+#### 类型 T 方法集
+因为如果我们只有一个值，仍然可以调用一个接收者为指针类型的方法，这可以借助于Go语言传值的地址能力实现
 ```
 //指针作为接收者，引用语义
 func (p *Person) SetInfoPointer() {
@@ -702,12 +705,25 @@ func main() {
     p.SetInfoPointer() //func (p) SetInfoPointer()
     p.SetInfoValue()    //func (*p) SetInfoValue()
     (*p).SetInfoValue() //func (*p) SetInfoValue()
+
+    var j Person = Person{"mike", 'm', 18}
+    (&j).SetInfoPointer() //func (&p) SetInfoPointer()
+    j.SetInfoPointer()    //func (&p) SetInfoPointer()
+    j.SetInfoValue()      //func (p) SetInfoValue()
+    (&j).SetInfoValue()   //func (*&p) SetInfoValue()
 }
 ```
+### 匿名字段
+#### 方法的继承
+如果匿名字段实现了一个方法，那么包含这个匿名字段的struct也能调用该方法
+#### 方法的重写
+在继承的基础上，结构体重写，匿名字段的方法，并显示调用。
+### 表达式
+方法也可以进行赋值和传递。
+根据调用者不同，方法分为两种表现形式：方法值和方法表达式。两者都可像普通函数那样赋值和传参，区别在于方法值绑定实例，⽽方法表达式则须显式传参。
+```
 
-#### 类型 T 方法集
-
-
+```
 
 
 
