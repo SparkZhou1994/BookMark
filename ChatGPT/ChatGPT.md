@@ -25,9 +25,9 @@ import openai
 
 openai.api_key = ""
 response = openai.Completion.create(
-	model = "text-davinci-003", # chatGPT背后的模型
-	prompt = "向chatgpt提的问题",
-	max_tokens = 256, # 返回的最大字符个数
+    model = "text-davinci-003", # chatGPT背后的模型
+    prompt = "向chatgpt提的问题",
+    max_tokens = 256, # 返回的最大字符个数
 )
 # 打印结果
 message = response.choices[0].text
@@ -105,7 +105,7 @@ nn.RNN(5,6,1) # 第一个参数为输入数据的尺寸，第二个参数为输�
 # ~/config/config.py
 # coding:utf8
 """
-	存放配置文件
+    存放配置文件
 """
 train_path=r"x.txt"
 ```
@@ -115,19 +115,19 @@ train_path=r"x.txt"
 from config.config imprort train_path
 
 def read_data(filename):
-	my_list_x, my_list_y = [], []
-	# 打开数据文件
-	with open(filename, mode='r', encoding='utf-8') as f:
-		for line in f.readlines():
-			# 按照行提取样本x，y
-			(x, y) = line.strip().split('\t')
-			my_list_x.append(x)
-			my_list_y.append(y)
-	# 返回样本列表
-	return my_list_x, my_list_y
+    my_list_x, my_list_y = [], []
+    # 打开数据文件
+    with open(filename, mode='r', encoding='utf-8') as f:
+        for line in f.readlines():
+            # 按照行提取样本x，y
+            (x, y) = line.strip().split('\t')
+            my_list_x.append(x)
+            my_list_y.append(y)
+    # 返回样本列表
+    return my_list_x, my_list_y
 
 if __name__ == '__main__':
-	read_data(filename=train_path)
+    read_data(filename=train_path)
 ```
 ## ChatGPT项目实战之数据预处理模块
 ### 数据预处理
@@ -219,7 +219,7 @@ def get_data():
     # 2 实例化dataset对象
     name_class_dataset = NameClassDataset(my_list_x, my_list_y)
     # print(len(name_class_dataset))#20074
-    # print(name_class_dataset[1])  # Adsit	Czech
+    # print(name_class_dataset[1])  # Adsit Czech
     # 3 实例化dataloader
     train_loader = DataLoader(dataset=name_class_dataset, batch_size=1, shuffle=True) # shuffle=True 每次数据都不同
     return train_loader
@@ -474,21 +474,154 @@ if __name__ == '__main__':
 ### N-gram 语言模型
 引入马尔可夫假设: 随意一个词出现的概率只与它前面出现的有限的一个或者几个词有关
 - 如果一个词的出现与它周围的词都是独立的，称为unigram(一元语言模型)
-P(S) = P(W1) * P(W2) * …… * P(Wn)
+P(S) = P(W1) \* P(W2) \* …… \* P(Wn)
 - 如果一个词的出现仅依赖于它前面出现的一个词，称为bigram(二元语言模型)
-P(S) = P(W1) * P(W2|W1) * P(W3|W2)* …… * P(Wn|Wn-1)
+P(S) = P(W1) \* P(W2|W1) \* P(W3|W2) \* …… \* P(Wn|Wn-1)
 - 如果一个词的出现仅依赖于它前面出现的两个词，称为trigram(三元语言模型)
-P(S) = P(W1) * P(W2|W1) * P(W3|W2, W1)* …… * P(Wn|Wn-1, Wn-2)
+P(S) = P(W1) \* P(W2|W1) \* P(W3|W2, W1) \* …… \* P(Wn|Wn-1, Wn-2)
 实践中用的最多的是bigram和trigram
 
+#### bigram语言模型
+P(A|B) = P(A,B) / P(B) = C(A,B) / C(B)
 
+### 神经网络语言模型
+#### 模型的输入 
+w(t-n+1),...,w(t-2),w(t-1)就是前n-1个词。现在需要根据这已知的n-1个词预测下一个词w(t)。C(w)表示w所对应的词向量。
+#### 第一层
+将C[w(t-n+1)],...,C[w(t-2)],C[w(t-1)]。n-1个向量首尾拼接起来形成一个(n-1) \* m大小的向量，记为x。
+#### 第二层
+全连接层，通过全连接层后再使用tanh激活函数进行处理
+#### 第三层
+全连接层，输出共有V个神经元(V代表语料的词汇)。每个神经元代表一个概率，最大概率值，就是我们需要预测的结果。
+#### ChatGPT的本质
+ChatGPT就是属于基于神经网络的一种语言模型，只不过是网络模型更复杂，更多层次。
 
+## ChatGPT原理之GPT-1模型结构简介
+### 模型架构
+#### 生成式预训练架构Transformer
+- input 输入
+- encoder 编码器，用于特征提取，包含多头注意力机制，残差的连接和标准化，前馈连接层
+- decoder 解码器，包含掩码的多头注意力机制，残差的连接和标准化，前馈连接层
+- output 输出
+对比于经典的Transformer架构，解码器模块采用了6个Decoder Block;GPT-1的架构采用了12个Decoder Block。
 
+#### 数据集
+BooksCorpus，包含7000本没有发布的书籍。数据集拥有更长的上下文依赖关系，使得模型能学得更长期的依赖关系;这些书籍因为没有发布，所以很难在下游数据集上见到，更能验证模型的泛化能力。
+### 模型训练过程
+#### 第一阶段：无监督预训练
+训练语言模型的目的是最大化似然函数，由公式可知GPT-1是一个单向语言模型。
+- 假设输入张量h0 = UWe + Wp
+- 将h0传入GPT-1的Decoder Block中，依次得到ht: ht = transformer_block(ht-1)
+- 最后得到的ht来预测下一个单词
 
+#### 第二阶段：下游监督任务fine-tunning
+训练样本包括单词序列[x1,x2,...,xn]和label y， 根据单词序列来预测y
+##### 第一步 根据任务定义不同输入
+- Classification： Start Text Extract
+- Entailment： Start Premise Delim Hypothesis Extract
+- Similarity： 
+第一个输入： Start Text1 Delim Text2 Extract
+第二个输入： Start Text2 Delim Text1 Extract
+- Multiple Choice： 
+第一个输入： Start Context Delim Answer1 Extract
+第二个输入： Start Context Delim Answer2 Extract
+第三个输入： Start Context Delim AnswerN Extract
 
+##### 第二步 对不同任务增加不同的分类层
+每个输入后接一个Transformere
+### 模型特点
+#### 优点
+- transformer对学习词向量能力强大
+- 得到词向量基础上进行下游任务的学习，能够有更好的泛化能力
+- 对于下游任务训练，只要微调就能得到非常好的效果
 
+#### 缺点
+- 泛化能力远低于经过微调的有监督任务
+- GPT-1 只是一个简单的领域专家，而非通用的语言学家
 
+## ChatGPT原理之GPT-2模型结构简介
+### 模型架构
+无监督的多任务学习者
+Layere Norm层放置在Self-Attention层和Feed Forward层前，而不是像原来那样后置。
+在最后一层Transformer Block后增加了Layere Norm层
+#### 前置Layere Norm层的目的
+增加模型的拟合能力、稳定模型训练过程。
+#### 数据集
+Reddit上高赞的文章，WebText，800万篇。为了避免和测试集冲突，移除了涉及Wikipedia的文章。
+### 模型训练过程
+使用无监督的预训练模型做有监督的任务。
+去掉了Fine-tuning，只包括无监督的预训练过程，属于单向语言模型。
+下游任务不要进行微调过程，直接通过预训练模型得到结果，称为Zero-shot思想(0样本学习)
+通常我们做微调任务，其实都是在估计p(output|input)，但如果要做通用模型，他需要对p(output|input, task)建模
+语言模型=无监督多任务学习。相比于有监督的任务学习，语言模型只是不需要显示地定义哪些字段是要预测的输出。在训练完时，语言模型就自然地将翻译任务和输入输出学习到了。
+### 模型特点
+#### 优点
+可以迁移到其他类别任务中而不需要额外地训练
+#### 缺点
+在zero-shot的任务上表现不错，但在其他任务有时不比随机好。
 
+## ChatGPT原理之GPT-3模型训练
+### 模型架构
+与GPT-2完全一致
+#### 数据集
+5个不同的语料大约45TB的文本数据，分为两部分。
+- 低质量的Common Crawl(网页数据)
+- 高质量的WebText2，Books1，Book2，Wikipedia
 
+### 模型训练过程
+引入情景学习(in-context learning), 在给定的任务中，能不全任务中的其他实例。给出了三种不同类型的情景学习，分别是：Few-shot、One-shot、Zero-shot。
+微调存在的问题
+- 需要对每个任务和数据集进行微调
+- 需要对数据集进行标注
+- 当一个样本没有出现在数据分布的时候，泛化性不见得比小模型要好
 
+#### Zero-shot
+给出任务描述，然后提供测试数据直接让预训练模型去预测
+#### One-shot
+提供一个样本进行指导，然后进行预测
+#### Few-shot
+多样本学习。 
+x -> model -> y
+你看他 模型  结果
+他的成名曲是《夜曲》
+他姓周     -> 杰伦
 
+## ChatGPT原理之GhatGPT原理
+### ChatGPT原理
+模型越大结果可能越专一，但可能不是期望的。这被称为大型语言模型能力不一致问题。原始的GPT-3就是非一致模型。
+ChatGPT将人类的反馈纳入训练过程，更好地使模型输出与用户意图保持一致。
+### 强化学习(RL)
+又被称为再励学习、评价学习或增强学习，是机器学习的一个分支，用来解决连续决策问题。
+用于描述和解决智能体(Agent)在与环境的交互过程中，通过学习策略以达成回报最大化或实现特定目标的问题。
+Agent对Environment进行Action，通过不断试错，得到Environment的Reward和State进行调整。
+强化学习的基本要素
+- Agent
+- Environment
+- State: Environment和Agent的状态
+- Policy: 观测状态来进行决策来控制Agent来Action。P(A=a|S=s)
+- Reward: Agent在当前State下，采取Action后会得到一定的奖励
+
+#### 强化学习的步骤
+- 通过强化学习学出Policy函数
+- 获取状态s1，再带入Policy得到a1，同时环境生成下一个状态s2，并奖励Agent一个r1
+- 反复上一步过程，得到游戏的trajectory(轨迹)，这个轨迹就是每一步的状态，动作，奖励
+
+### ChatGPT强化学习步骤
+#### 监督模型调优(SFT)
+预训练模型在少量已标注的数据上进行调优，以学习从给定的prompt列表生成输出的有监督的策略(SFT模型)
+- 收集数据，以训练有监督的策略模型
+- 数据收集: 选择一个提示列表，标注人员按要求写下预期的输出。
+- 模型选择: ChatGPT的开发人员选择了GPT3.5系列中的预训练模型(调优后的GPT-3模型)
+
+#### 训练奖励模型(Reward Model，RM)
+目的为SFT模型输出进行打分
+- 选择prompt列表，SFT模型为每个prompt生成多个输出(4-9个)
+- 标注者将输出进行降序排序，得到一个新的标签数据集
+- 模型选择: 目的是通过该训练模型得到一个预期值(得分)，模型损失函数越小越好
+
+#### 使用PPO模型微调SFT模型
+利用近端策略优化算法(PPO)优化RM模型进行调优SFT模型，而调优模型称为近端策略优化模型
+- 获取数据
+- 输入PPO模型(ChatGPT模型)，得到结果
+- 将结果输入RM，得到奖励，如果奖励低，利用PPO算法更新ChatGPT模型参数
+- 循环上述步骤，不断更新ChatGPT、RM模型

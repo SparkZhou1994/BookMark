@@ -13,4 +13,28 @@ spam filtering、speech recognition、 machine translation、 online advertising
 无监督学习算法可能决定将数据分配给两个不同的组或两个不同的集群。比例Google News查看新闻文章并将相关故事组合在一起[Group similar data points together]
 ## 异常检测 Anomaly detection
 Find unsual data points
+## 降维 Dimensionality reduction
+Compress data using fewer numbers
+# 线性回归 Linear Regression
+Supervised learning model.Data has "right answers"
+Regression model predicts numbers
+Linear regression with one variable = Univariate linear regression
+## Terminology
+### Training Set: Data used to train the model
+#### x = "input" varible = feature
+#### y = "output" varible = "target" varible
+#### m = number of training examples
+#### (x, y) = single training example
+#### (x(i), y(i)) = (i)th training example
+#### f = model
+#### y-hat = the prediction = estimated y
+# 代价函数 cost function
+代价函数的思想是机器学习中最普遍和最重要的思想之一，用于线性回归和训练世界上许多最先进的人工智能模型。
+
+
+
+
+
+
+
 
