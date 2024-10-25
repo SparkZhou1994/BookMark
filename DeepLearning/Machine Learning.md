@@ -30,6 +30,8 @@ Linear regression with one variable = Univariate linear regression
 #### y-hat = the prediction = estimated y
 # 代价函数 cost function
 代价函数的思想是机器学习中最普遍和最重要的思想之一，用于线性回归和训练世界上许多最先进的人工智能模型。
+输入特征x，输出目标y的训练集。 拟合这个训练集的模型是线性函数f_w,b(x)= wx + b
+w和b称为parameters(参数)，是可以在训练期间调整以改进模型的变量。 也被称为coefficients(系数)和weights(权重)
 
 
 
