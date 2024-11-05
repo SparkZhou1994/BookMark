@@ -32,6 +32,46 @@ Linear regression with one variable = Univariate linear regression
 代价函数的思想是机器学习中最普遍和最重要的思想之一，用于线性回归和训练世界上许多最先进的人工智能模型。
 输入特征x，输出目标y的训练集。 拟合这个训练集的模型是线性函数f_w,b(x)= wx + b
 w和b称为parameters(参数)，是可以在训练期间调整以改进模型的变量。 也被称为coefficients(系数)和weights(权重)
+成本函数j(w,b)
+如何衡量一条直线与训练数据的拟合程度，为此，我们将构建一个成本函数。成本函数采用预测y-hat并通过取预测y-hat 减去目标y得到的差异(误差)的平方，对每个训练示例的平方差进行累加， 最后除以训练样本个数(按照惯例，机器学习使用的成本函数实际上使除以2倍训练示例个数，为了后面的计算更整洁)。最终目的是找到使成本函数最小的w和b的值。
+平方误差成本函数是迄今为止线性回归最常用的函数。
+# 梯度下降 Gradient Descent
+用于找出最小的代价函数，不仅用于线性回归，还用于训练一些最先进的神经网络模型(深度学习模型)
+梯度下降是一种可用于尝试最小化任何函数的算法，而不仅仅是线性回归的成本函数。事实证明，梯度下降适用于更一般的函数(具有两个以上参数的模型的其他成本函数)
+梯度下降找到局部最小值就停止了，不会继续下去，这个局部最小值不一定是最小值。
+w = w - alpha * [dJ(w,b)/dw]
+alpha 称为 学习率0到1的值，控制下坡的步幅
+[dJ(w,b)/dw] 告诉下坡方向
+对于梯度下降算法，将重复计算w、b，直到算法收敛
+正确的同步更新:
+tmp_w = w - alpha * [dJ(w,b)/dw]
+tmp_b = b - alpha * [dJ(w,b)/db]
+w = tmp_w
+b = tmp_b
+错误的更新更新:
+tmp_w = w - alpha * [dJ(w,b)/dw]
+w = tmp_w
+tmp_b = b - alpha * [dJ(w,b)/db]
+b = tmp_b
+## 批量梯度下降 Batch gradient descent
+Batch : Each step of gradient descent used all the training examples.
+# 多类特征 Multiple Features(variables)
+xj = jth feature
+n = number of features
+x(i) = features of ith training example
+xj(i) = value of feature j in ith training example
+fw,b(x) = w1 * x1 + w2 * x2 + …… + wn * xn + b = w · x + b
+该模型称为具有多输入特征的多元线性回归(multiple linear regression)
+
+
+
+
+
+
+
+
+
+
 
 
 
