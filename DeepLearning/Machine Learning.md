@@ -61,7 +61,76 @@ n = number of features
 x(i) = features of ith training example
 xj(i) = value of feature j in ith training example
 fw,b(x) = w1 * x1 + w2 * x2 + …… + wn * xn + b = w · x + b
-该模型称为具有多输入特征的多元线性回归(multiple linear regression)
+该模型称为具有多输入特征的多元线性回归(multiple linear regression), 并不是多元回归(multivariate regression)
+# 向量化 Vectorization
+## Parameters and features
+w = [w1 w2 w3] n = 3
+b is a number
+x = [x1 x2 x3]
+```
+w = np.array([1.0,2.5,-3.3])
+b = 4
+x = np.array([10,20,30])
+```
+Without vectorization
+fw,b(x) = w1 * x1 + w2 * x2 + w3 * x3 + b  
+```
+f = 0
+for j in range(0,n):
+	f = f + w[j] * x[j]
+f = f + b	
+``` 
+Vectorization
+fw,b(x) = w · x + b
+```
+f = np.dot(w,x) + b
+```
+## Gradient descent
+w = (w1, w2, ..., w16)
+d = (d1, d2, ..., d16) dereivatives
+w = np.array([0.5, 1.3, ..., 3.4])
+d = np.array([0.3, 0.2, ..., 0.4])
+compute wj = wj - 0.1(learning rate ) * dj for j = 1 ... 16
+with vectorization 
+w = w - 0.1d
+Vector notation
+Parameters 	w = [w1, ..., wn]
+Model 		fw,b(x) = w · x + b
+Cost function 	J(w, b)
+Gradient descent 	repeat {
+						wj = wj - alpha * [dJ(w,b)/dw] = wj - alpha * (1/m) sumUp((fw,b(x) - y)) * x)
+						b  = b - alpha * [dJ(w,b)/db]
+					}
+
+ An alternative to gradient descent
+ Normal equation
+ - only for linear regression
+ - solve for w, b without iterations, but slow when number of features is large
+
+# Feature scaling
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
