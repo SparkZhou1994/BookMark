@@ -20,6 +20,7 @@
 
 ## Java
 - JavaGuide
+- prometheus.md, prometheus.wang
 
 ## Netty
 - Netty实战.md, 诺曼·毛瑞尔（Norman Maurer）, 人民邮电出版社
