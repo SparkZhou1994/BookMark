@@ -1,7 +1,7 @@
 # change user name
 ```
 git config --global user.name "SparkZhou"
-git config --global user.email "zhoujuhui@qq.com"
+git config --global user.email "zhoujuhui@xxx.com"
 ```
 # SSH
 ```
