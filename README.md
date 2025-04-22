@@ -15,8 +15,7 @@
 - 雅思旗舰VIP直达7分班
 
 ## Go
-- go语言与区块链开发.md
-- go开发实战.md
+- go语言与区块链开发
 
 ## Java
 - JavaGuide
@@ -25,6 +24,9 @@
 ## Netty
 - Netty实战.md, 诺曼·毛瑞尔（Norman Maurer）, 人民邮电出版社
 - Netty进阶之路-跟着案例学Netty.md, 李林锋,  电子工业出版社
+
+## Web3.0
+- Web3.0入门与实战一站式开发.md
 
 ## 日本語
 - 新东方日语零基础直达N1全程班
