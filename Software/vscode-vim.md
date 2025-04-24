@@ -1,4 +1,8 @@
 # 安装及配置vim插件
+在命令行执行
+defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+
+settings.json
 ```
 {
   "files.autoSave": "afterDelay",
@@ -13,14 +17,56 @@
   "editor.formatOnSave": true,
   "editor.wordWrap": "on",
   "editor.guides.bracketPairs": true,
-  //"editor.bracketPairColorization.enabled": true, (此设置vscode在较新版本已默认开启)
+  "editor.bracketPairColorization.enabled": true,
   "editor.suggest.snippetsPreventQuickSuggestions": false,
   "editor.acceptSuggestionOnEnter": "smart",
   "editor.suggestSelection": "recentlyUsed",
   "window.dialogStyle": "custom",
   "debug.showBreakpointsInOverviewRuler": true,
+
+  // vim
+  "vim.easymotion": true,
+  "vim.incsearch": true,
+  "vim.useSystemClipboard": true,
+  "vim.useCtrlKeys": true,
+  "vim.hlsearch": true,
+  "vim.insertModeKeyBindings": [
+    {
+      "before": ["j", "j"],
+      "after": ["<Esc>"]
+    }
+  ],
+  "vim.normalModeKeyBindingsNonRecursive": [
+    {
+      "before": ["<leader>", "d"],
+      "after": ["d", "d"]
+    },
+    {
+      "before": ["<C-n>"],
+      "commands": [":nohl"]
+    },
+    {
+      "before": ["K"],
+      "commands": ["lineBreakInsert"],
+      "silent": true
+    }
+  ],
+  "vim.leader": "<space>",
+  "vim.handleKeys": {
+    "<C-a>": false,
+    "<C-f>": false
+  },
+
+  "// To improve performance",
+  "extensions.experimental.affinity": {
+    "vscodevim.vim": 1
+  }
 }
 ```
+# 安装及配置vim插件
+// TODO
+
+
 # 插件
 ## theme
 houston 
