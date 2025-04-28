@@ -5,24 +5,34 @@ defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
 settings.json
 ```
 {
-  "files.autoSave": "afterDelay",
-  "files.autoGuessEncoding": true,
-  "workbench.list.smoothScrolling": true,
-  "editor.cursorSmoothCaretAnimation": "on",
-  "editor.smoothScrolling": true,
-  "editor.cursorBlinking": "smooth",
-  "editor.mouseWheelZoom": true,
-  "editor.formatOnPaste": true,
-  "editor.formatOnType": true,
-  "editor.formatOnSave": true,
-  "editor.wordWrap": "on",
-  "editor.guides.bracketPairs": true,
-  "editor.bracketPairColorization.enabled": true,
-  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  // defalut
   "editor.acceptSuggestionOnEnter": "smart",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.fontSize": 18,
+  "editor.guides.bracketPairs": true,
+  "editor.mouseWheelZoom": true,
+  "editor.smoothScrolling": true,
   "editor.suggestSelection": "recentlyUsed",
-  "window.dialogStyle": "custom",
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.wordWrap": "on",
+
   "debug.showBreakpointsInOverviewRuler": true,
+
+  "files.autoGuessEncoding": true,
+  "files.autoSave": "afterDelay",
+  
+  "git.openRepositoryInParentFolders": "always",
+
+  "update.mode": "none",
+
+  "window.dialogStyle": "custom",
+  "workbench.colorTheme": "Default Dark Modern",
+  "workbench.list.smoothScrolling": true,
 
   // vim
   "vim.easymotion": true,
@@ -57,17 +67,87 @@ settings.json
     "<C-f>": false
   },
 
-  "// To improve performance",
+  // To improve performance
   "extensions.experimental.affinity": {
     "vscodevim.vim": 1
   }
 }
 ```
-# 安装及配置vim插件
-// TODO
+# vim模式
+## 普通模式 --NORMAL--
+### NORMAL -〉 INSERT
+i 在光标前插入 insert
+I 在行首插入 append
+a 在光标后插入
+A 在行尾插入
+o 在下一行插入 one line
+O 在上一行插入
+### NORMAL -〉 VISUAL
+v
+### NORMAL -〉 命令模式
+：
 
+## 插入模式 --INSERT--
+### INSERT -〉 NORMAL
+ESC jj / CapsLock
 
-# 插件
+## 可视模式 --VISUAL--
+可以选中文字
+### VISUAL -〉 NORMAL
+ESC v
+
+## 命令模式 ：
+### 命令模式 -〉 NORMAL
+ESC
+
+# 光标移动
+## 普通模式
+### 字母为单位 
+记忆口诀 h在最左边 就是左，l在最右边 就是右
+h 左
+j 下
+k 上
+l 右
+### 单词为单位 
+w 跳到下一个单词开头 forward
+b 跳到本单词或上一个单词开头 begin
+e 跳到本单词或下一个单词结尾 end
+ge 跳到上一个单词结尾
+### 行为单位
+0 跳到行首
+^ 跳到从行首开始第一个非空字符 正则时^表示开头
+$ 跳到行尾 正则时$表示结尾
+gg 跳到第一行
+G 跳到最后一行
+### 查找 find
+f{char} 光标跳到下个{char}所在位置
+F{char} 反向移动到上一个{char}所在位置
+t{char} 光标跳到下一个{char}的前一个字符的位置
+T{char} 光标反向移动到上个{char}的后一个字符的位置
+; 重复上次的字符查找操作
+, 反向查找上次的查找命令
+# 动作 motion
+## 普通模式
+### i(inner) 和 a(around) 区别
+|command|raw text|i|a|
+|:-:|:-:|:-:|:-:|
+|x"|"foo"|foo|"foo"|
+|xw| foo |foo| foo|
+|x(|(foo)|foo|(foo)|
+### 动作
+iw / aw word
+i( / a( 或 ib / ab bracket
+i{ / a{ 或 iB / aB
+i" / a"
+i' / a'
+i` / a`
+i< / a<
+i[ / a[
+it / at tag
+is / as sentence
+ip / ap paragraph
+
+# 插件 
 ## theme
 houston 
 one dark pro
