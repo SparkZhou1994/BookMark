@@ -21,3 +21,6 @@ deb-src http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted univer
 ```
 sudo apt-get update
 ```
+# chrome
+https://www.slimjet.com/chrome/google-chrome-old-version.php
+version 104.0.5112.102

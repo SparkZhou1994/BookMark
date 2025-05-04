@@ -92,7 +92,7 @@ v
 ESC jj / CapsLock
 
 ## 可视模式 --VISUAL--
-可以选中文字
+加上方向键或者动作motion, 可以选择文字
 ### VISUAL -〉 NORMAL
 ESC v
 
@@ -119,22 +119,44 @@ ge 跳到上一个单词结尾
 $ 跳到行尾 正则时$表示结尾
 gg 跳到第一行
 G 跳到最后一行
-### 查找 find
+### 在当前行查找 find 
 f{char} 光标跳到下个{char}所在位置
 F{char} 反向移动到上一个{char}所在位置
 t{char} 光标跳到下一个{char}的前一个字符的位置
 T{char} 光标反向移动到上个{char}的后一个字符的位置
 ; 重复上次的字符查找操作
 , 反向查找上次的查找命令
-# 动作 motion
+### 整文查找
+输入/{char}\c
+\c 表示大小写不敏感 \C 表示大小写敏感
+n 查找下一个 N 表示查找上一个
+# 操作符 operator
 ## 普通模式
-### i(inner) 和 a(around) 区别
+d(delete) 删除
+c(change) 修改(删除并进入插入模式)
+y(yank) 复制
+v(visual) 选中并进入可视模式
+p(paste)  粘贴
+u(undo) 撤销
+
+# 操作符 operator + 动作 motion
+## 操作符 operator
+## 普通模式
+d(delete) 删除
+c(change) 修改(删除并进入插入模式)
+y(yank) 复制
+v(visual) 选中并进入可视模式
+p(paste)  粘贴
+u(undo) 撤销
+## 动作 motion
+### 普通模式
+#### i(inner) 和 a(around) 区别
 |command|raw text|i|a|
 |:-:|:-:|:-:|:-:|
 |x"|"foo"|foo|"foo"|
 |xw| foo |foo| foo|
 |x(|(foo)|foo|(foo)|
-### 动作
+#### 动作
 iw / aw word
 i( / a( 或 ib / ab bracket
 i{ / a{ 或 iB / aB
@@ -146,7 +168,20 @@ i[ / a[
 it / at tag
 is / as sentence
 ip / ap paragraph
-
+## 实操
+### 删除两行
+2dd
+### 删除到、修改到、复制到s
+dfs、cfs、yfs, p
+### 删除到、修改到、复制到开头 ^ / 结尾 $
+d^/$、c^/$、y^/$, p
+### 删除、修改、复制整个文件
+die(entire)、cie、yie, p
+### 删除、修改、复制标签
+dit、cit、yie, p
+# 大小写转换
+TODO
+TODO
 # 插件 
 ## theme
 houston 
