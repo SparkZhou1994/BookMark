@@ -33,3 +33,9 @@ Spotify for macOS (Intel)
 # docker desktop
 version 4.6.1 released 2022-03-22
 https://desktop.docker.com/mac/main/amd64/76265/Docker.dmg
+# f.lux
+version 42.2
+# Mac Mouse Fix
+version 2.2.5
+# INNA 
+version 1.3.5
