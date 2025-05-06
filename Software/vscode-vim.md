@@ -59,6 +59,20 @@ settings.json
       "before": ["K"],
       "commands": ["lineBreakInsert"],
       "silent": true
+    },
+    // tab 相关
+    {
+      "before": ["t", "h"],
+      "commands": [":tabp"]
+    },
+    {
+      "before": ["t", "l"],
+      "commands": [":tabn"]
+    }
+    // 由 editor 跳转 terminal
+    {
+      "before": ["<leader>", "t"],
+      "commands": ["workbench.action.terminal.focus"]
     }
   ],
   "vim.leader": "<space>",
@@ -77,8 +91,8 @@ settings.json
 ## 普通模式 --NORMAL--
 ### NORMAL -〉 INSERT
 i 在光标前插入 insert
-I 在行首插入 append
-a 在光标后插入
+I 在行首插入
+a 在光标后插入 append
 A 在行尾插入
 o 在下一行插入 one line
 O 在上一行插入
@@ -180,8 +194,30 @@ die(entire)、cie、yie, p
 ### 删除、修改、复制标签
 dit、cit、yie, p
 # 大小写转换
-TODO
-TODO
+~ 将光标下的字母改变大小写
+3~  将光标位置开始的3个字母改变其大小写
+g~~ 改变当前行字母的大小写
+gUU 将当前行的字母改成大写
+guu 将当前行的字母改成小写
+gUaw(gUiw)  将光标下的单词改成大写
+guaw(guiw)  将光标下的单词改成小写
+# Tips
+gd 查看函数定义go to defination
+gh 查看函数参数hover
+gt 切换标签页tab
+command 0 切到侧边栏 空格可以打开文件 l将光标返回
+分屏时 command 1，2来相互切换
+command shift p 输入 focus terminal
+# easymotion
+空格空格s{char} 快速查找字符
+空格空格w{char} 快速查找单词开始的字符
+空格空格e{char} 快速查找单词结束的字符
+# vim-surround
+ds{char}  删除成对字符
+cs{char}{char用右成对字符}  替换成对字符
+ys motion{char} 添加成对字符
+# 多光标模式
+command d或者gb
 # 插件 
 ## theme
 houston 
