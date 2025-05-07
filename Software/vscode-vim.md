@@ -68,7 +68,7 @@ settings.json
     {
       "before": ["t", "l"],
       "commands": [":tabn"]
-    }
+    },
     // 由 editor 跳转 terminal
     {
       "before": ["<leader>", "t"],
