@@ -23,6 +23,7 @@ git config --global http.lowSpeedTime 999999
 git config --global --unset http.version
 git config --global --unset http.postBuffer
 git config --global --unset http.lowSpeedLimit
+
 git config --global --unset http.lowSpeedTime
 ```
 ## change directory into the local clone
