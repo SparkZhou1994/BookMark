@@ -7,6 +7,7 @@ spam filtering、speech recognition、 machine translation、 online advertising
 我们试图从无数可能的数字中预测一个数字[Predict a number infinitely many possible outputs]
 ## 分类算法 Classification
 与回归不同，预测结果是有限集合[Predict categories small number of possible outputs]
+
 # 无监督学习 Unsupervised learning
 给定的数据与任何输出标签y无关，我们的工作是找到一些结构或模式，在数据中找到想要的答案。[Data only comes with inputs x, but not output labels y. Algorithm has to find structure in the data.]
 ## 聚类算法 Clustering
@@ -15,6 +16,7 @@ spam filtering、speech recognition、 machine translation、 online advertising
 Find unsual data points
 ## 降维 Dimensionality reduction
 Compress data using fewer numbers
+
 # 线性回归 Linear Regression
 Supervised learning model.Data has "right answers"
 Regression model predicts numbers
@@ -28,6 +30,7 @@ Linear regression with one variable = Univariate linear regression
 #### (x(i), y(i)) = (i)th training example
 #### f = model
 #### y-hat = the prediction = estimated y
+
 # 代价函数 cost function
 代价函数的思想是机器学习中最普遍和最重要的思想之一，用于线性回归和训练世界上许多最先进的人工智能模型。
 输入特征x，输出目标y的训练集。 拟合这个训练集的模型是线性函数f_w,b(x)= wx + b
@@ -35,6 +38,7 @@ w和b称为parameters(参数)，是可以在训练期间调整以改进模型的
 成本函数j(w,b)
 如何衡量一条直线与训练数据的拟合程度，为此，我们将构建一个成本函数。成本函数采用预测y-hat并通过取预测y-hat 减去目标y得到的差异(误差)的平方，对每个训练示例的平方差进行累加， 最后除以训练样本个数(按照惯例，机器学习使用的成本函数实际上使除以2倍训练示例个数，为了后面的计算更整洁)。最终目的是找到使成本函数最小的w和b的值。
 平方误差成本函数是迄今为止线性回归最常用的函数。
+
 # 梯度下降 Gradient Descent
 用于找出最小的代价函数，不仅用于线性回归，还用于训练一些最先进的神经网络模型(深度学习模型)
 梯度下降是一种可用于尝试最小化任何函数的算法，而不仅仅是线性回归的成本函数。事实证明，梯度下降适用于更一般的函数(具有两个以上参数的模型的其他成本函数)
@@ -55,6 +59,7 @@ tmp_b = b - alpha * [dJ(w,b)/db]
 b = tmp_b
 ## 批量梯度下降 Batch gradient descent
 Batch : Each step of gradient descent used all the training examples.
+
 # 多类特征 Multiple Features(variables)
 xj = jth feature
 n = number of features
@@ -108,7 +113,22 @@ Gradient descent 	repeat {
  - solve for w, b without iterations, but slow when number of features is large
 
 # Feature scaling
-
+## Feature and parameter values
+price = w1*x1 + w2*x2 +b
+x1:size range:300-2000
+x2:bedrooms range:0-5
+size of paramter w1, w2?
+当特征值很大时，取一个较小的参数。
+等高线中的成本函数(x轴为w1，y轴为w2)，是又高又瘦的椭圆形。这导致梯度下降可能会来回反弹很久，这种情况下，我可以采用对特征进行缩放的方法。使得x1， x2都在相似的范围内(如0到1或-1到1)。
+## method for scaling
+### 最大值缩放
+将每个x1都除以范围的最大值(2000), 同时将x2除以范围的最大值(5)
+### mean normalization 均值归一化
+将数据缩放到在[-1， 1]之间。
+首先，找出x1的平均值，称为μ1。然后将每个(x1-μ1)/(max(2000)-min(300))。x2同理。
+### Z-score normalization 
+计算出standard deviation 标准差σ。然后将每个(x1-μ1)/(σ1)。x2同理。
+## Checking Gradient Descent for Convergence
 
 
 
