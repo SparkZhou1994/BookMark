@@ -11,6 +11,7 @@ cd ~/.ssh
 cat id_ed25519.pub
 ```
 ## add SSH on the github website
+
 # for brew
 ```
 git config --global http.version HTTP/1.1
@@ -32,3 +33,17 @@ git remote -v
 git remote set-url origin git@github.com:username/your-repository.git
 ```
 ### commit the code
+
+# remvoe .DS_Store
+find . -name .DS_Store -print0 | xargs -0 git rm -f --ignore-unmatch
+
+# gitignore
+```
+#mac
+**/.DS_Store
+Thumbs.db
+#ubuntu
+*.*~
+#hidden file
+.*
+```
