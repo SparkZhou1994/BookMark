@@ -28,6 +28,7 @@ git config --global --unset http.lowSpeedTime
 ```
 ## change directory into the local clone
 ```
+git remote -v
 git remote set-url origin git@github.com:username/your-repository.git
 ```
 ### commit the code
