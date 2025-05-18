@@ -4,7 +4,7 @@
 - ChatGPT.md, 黑马程序员ChatGPT视频教程
 
 ## Database
-- 数据库系统内幕.md, 亚历克斯·彼得罗夫（Alex Petrov）, 机械工业出版社
+- 数据库系统内幕.md, 亚历克斯·彼得罗夫(Alex Petrov), 机械工业出版社
 
 ## DeepLearning
 - Machine Learning.md, 吴恩达, Stanford
@@ -22,8 +22,11 @@
 - prometheus.md, prometheus.wang
 
 ## Netty
-- Netty实战.md, 诺曼·毛瑞尔（Norman Maurer）, 人民邮电出版社
+- Netty实战.md, 诺曼·毛瑞尔(Norman Maurer), 人民邮电出版社
 - Netty进阶之路-跟着案例学Netty.md, 李林锋,  电子工业出版社
+
+## Quant
+- 打开量化投资的黑箱.md, 里什·纳兰(Rishi K. Narang), 机械工业出版社
 
 ## Web3.0
 - Web3.0入门与实战一站式开发.md
