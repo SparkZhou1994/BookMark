@@ -238,7 +238,7 @@ drawio 绘图
 figma for vs code 设计
 remote ssh
 dev containers
-diff
+Partial Diff
 Path Intellisense （智能路径提示）
 docker
 DotENV 配置临时环境变量
