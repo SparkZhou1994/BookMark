@@ -5,7 +5,8 @@ git config --global user.email "zhoujuhui@xxx.com"
 ```
 # SSH(优先使用ed25519算法，如果机器太老再使用rsa)
 ```
-ssh-keygen -t ed25519-sk -C "your_email@example.com"
+ssh-keygen -t ed25519-sk -C "your_email@example.com" // for mac
+ssh-keygen -t ed25519 -C "your_email@example.com" // for ubuntu
 ssh-keygen -t rsa -C "zhoujuhui@qq.com"
 cd ~/.ssh
 cat id_ed25519.pub
