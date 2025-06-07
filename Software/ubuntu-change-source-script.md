@@ -23,7 +23,6 @@ sudo apt-get update
 ```
 # git
 ```
-sudo add-apt-repository ppa:git-core/ppa
 sudo apt-get update
 sudo apt-get install git
 ```
@@ -32,3 +31,6 @@ sudo apt-get install git
 https://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/
 https://www.slimjet.com/chrome/google-chrome-old-version.php
 version 104.0.5112.102
+# startup
+search Applications named Startup Applications
+add your command
