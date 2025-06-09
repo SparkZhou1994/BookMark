@@ -42,3 +42,4 @@ sudo snap set system proxy.http="http://127.0.0.1:xxx"
 sudo snap set system proxy.https="http://127.0.0.1:xxx"
 # vscode
 sudo snap install code --classic
+https://update.code.visualstudio.com/1.41.1/linux-deb-x64/stable

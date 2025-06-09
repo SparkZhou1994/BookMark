@@ -6,6 +6,9 @@ settings.json
 ```
 {
   // defalut
+  "debug.showBreakpointsInOverviewRuler": true,
+  "diffEditor.renderSideBySide": false,
+
   "editor.acceptSuggestionOnEnter": "smart",
   "editor.bracketPairColorization.enabled": true,
   "editor.cursorBlinking": "smooth",
@@ -20,14 +23,44 @@ settings.json
   "editor.suggestSelection": "recentlyUsed",
   "editor.suggest.snippetsPreventQuickSuggestions": false,
   "editor.wordWrap": "on",
-
-  "debug.showBreakpointsInOverviewRuler": true,
+  // To improve performance for vim
+  "extensions.experimental.affinity": {
+    "vscodevim.vim": 1
+  },
 
   "files.autoGuessEncoding": true,
   "files.autoSave": "afterDelay",
-  
+  "files.eol": "\n",
+  // Git 
   "git.openRepositoryInParentFolders": "always",
-
+  "git.path": "C:\\Program Files\\Git\\cmd\\git.exe",
+  // JDK
+  "java.configuration.maven.userSettings": "C:\\Users\\Spark\\Documents\\Software\\.m2\\settings.xml",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-1.8",
+      "path": "C:\\Users\\Spark\\Documents\\Software\\Java\\jdk1.8.0_161",
+    },
+    {
+      "name": "JavaSE-21",
+      "path": "C:\\Users\\Spark\\Documents\\Software\\Java\\jdk-21.0.3",
+      "default": true
+    }
+  ],
+  "java.errors.incompleteClasspath.severity": "ignore",
+  "java.jdt.ls.java.home": "C:\\Users\\Spark\\Documents\\Software\\Java\\jdk-21.0.3",
+  // MAVEN
+  "maven.executable.path": "C:\\Users\\Spark\\Documents\\Software\\apache-maven-3.6.0\\bin\\mvn.cmd",
+  "maven.terminal.customEnv": [
+    {
+      "environmentVariable": "JAVA_HOME",
+      "value": "C:\\Users\\Spark\\Documents\\Software\\Java\\jdk-21.0.3"
+    }
+  ],
+  "maven.terminal.useJavaHome": true,
+  // SVN
+  "svn.path": "C:\\Program Files\\TortoiseSVN\\bin\\svn.exe",
+  
   "update.mode": "none",
 
   "window.dialogStyle": "custom",
@@ -36,16 +69,19 @@ settings.json
 
   // vim
   "vim.easymotion": true,
-  "vim.incsearch": true,
-  "vim.useSystemClipboard": true,
-  "vim.useCtrlKeys": true,
+  "vim.handleKeys": {
+    "<C-a>": false,
+    "<C-f>": false
+  },
   "vim.hlsearch": true,
+  "vim.incsearch": true,
   "vim.insertModeKeyBindings": [
     {
       "before": ["j", "j"],
       "after": ["<Esc>"]
     }
   ],
+  "vim.leader": "<space>",
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": ["<leader>", "d"],
@@ -75,16 +111,8 @@ settings.json
       "commands": ["workbench.action.terminal.focus"]
     }
   ],
-  "vim.leader": "<space>",
-  "vim.handleKeys": {
-    "<C-a>": false,
-    "<C-f>": false
-  },
-
-  // To improve performance
-  "extensions.experimental.affinity": {
-    "vscodevim.vim": 1
-  }
+  "vim.useCtrlKeys": true,
+  "vim.useSystemClipboard": true
 }
 ```
 # vim模式
@@ -307,3 +335,16 @@ Vetur （Vue必备，提示的嘛，方便）
 Live Server （代码保存后，浏览器自动更新）
 typescript vue plugin volar
 vue language features volar
+
+# Continue For VSCode
+```
+name: Local Assistant
+version: 1.0.0
+schema: v1
+models:
+  - name: DeepSeek V3 0324 (free)
+    provider: openrouter
+    model: deepseek/deepseek-chat-v3-0324:free
+    apiBase: https://openrouter.ai/api/v1
+    apiKey: 26@xx.com
+```
