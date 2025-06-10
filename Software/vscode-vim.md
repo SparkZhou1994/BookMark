@@ -30,8 +30,10 @@ settings.json
 
   "files.autoGuessEncoding": true,
   "files.autoSave": "afterDelay",
+  "files.encoding": "utf8",
   "files.eol": "\n",
-  // Git 
+  // Git
+  "git.autofetch": true, 
   "git.openRepositoryInParentFolders": "always",
   "git.path": "C:\\Program Files\\Git\\cmd\\git.exe",
   // JDK
@@ -58,6 +60,8 @@ settings.json
     }
   ],
   "maven.terminal.useJavaHome": true,
+  // Python
+  "python.defaultInterpreterPath": "C:\\Users\\Spark\\anaconda3\\envs\\python2\\python",
   // SVN
   "svn.path": "C:\\Program Files\\TortoiseSVN\\bin\\svn.exe",
   
@@ -112,7 +116,8 @@ settings.json
     }
   ],
   "vim.useCtrlKeys": true,
-  "vim.useSystemClipboard": true
+  "vim.useSystemClipboard": true,
+  "vsintellicode.modify.editor.suggestSelection": "choseToUpdateConfiguration"
 }
 ```
 # vim模式
