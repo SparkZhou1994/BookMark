@@ -1181,9 +1181,167 @@ var value = (console.log('Hi!'), true);
 
 value // truevar value = (console.log('Hi!'), true);
 ```
+### 运算顺序
+#### 圆括号的作用
+函数放在圆括号中，会返回函数本身。如果圆括号紧跟在函数的后面，就表示调用函数。圆括号之中，只能放置表达式，如果将语句放在圆括号之中，就会报错。
+```
+(expression)
+// 等同于
+expression
+
+function f() {
+  return 1;
+}
+
+(f) // function f(){return 1;}
+f() // 1
+
+(var a = 1)
+// SyntaxError: Unexpected token var
+```
+#### 左结合与右结合
+对于优先级别相同的运算符，同时出现的时候，就会有计算顺序的问题。
+JavaScript 语言的大多数运算符是“左结合”, 少数运算符是“右结合”，其中最主要的是赋值运算符（=）,三元条件运算符（?:）和指数运算符（**）也是右结合。
+```
+w = x = y = z;
+q = a ? b : c ? d : e ? f : g;
+2 ** 3 ** 2
+// 上面代码的解释方式如下
+w = (x = (y = z));
+q = a ? b : (c ? d : (e ? f : g));
+2 ** (3 ** 2) // 512
+```
+# 语法专题
+## 数据类型的转换
+### 概述
+JavaScript 是一种动态类型语言，变量没有类型限制，可以随时赋予任意值。这意味着，有些代码中变量的类型没法在编译阶段就知道，必须等到运行时才能知道。虽然变量的数据类型是不确定的，但是各种运算符对数据类型是有要求的。如果运算符发现，运算子的类型与预期不符，就会自动转换类型。
+### 强制转换
+#### Number()
+使用Number函数，可以将任意类型的值转化成数值。
+##### 原始类型值
+```
+// 数值：转换后还是原来的值
+Number(324) // 324
+
+// 字符串：如果可以被解析为数值，则转换为相应的数值
+Number('324') // 324
+
+// 字符串：如果不可以被解析为数值，返回 NaN。Number函数将字符串转为数值，要比parseInt函数严格很多。基本上，只要有一个字符无法转成数值，整个字符串就会被转为NaN。parseInt逐个解析字符，而Number函数整体转换字符串的类型。parseInt和Number函数都会自动过滤一个字符串前导和后缀的空格。
+Number('324abc') // NaN
+
+parseInt('\t\v\r12.34\n') // 12
+Number('\t\v\r12.34\n') // 12.34
+
+// 空字符串转为0
+Number('') // 0
+
+// 布尔值：true 转成 1，false 转成 0
+Number(true) // 1
+Number(false) // 0
+
+// undefined：转成 NaN
+Number(undefined) // NaN
+
+// null：转成0
+Number(null) // 0
+```
+##### 对象
+Number方法的参数是对象时，将返回NaN，除非是包含单个数值的数组。
+```
+Number({a: 1}) // NaN
+Number([1, 2, 3]) // NaN
+Number([5]) // 5
+```
+Number背后的转换规则比较复杂。
+- 第一步，调用对象自身的valueOf方法。如果返回原始类型的值，则直接对该值使用Number函数，不再进行后续步骤。
+- 第二步，如果valueOf方法返回的还是对象，则改为调用对象自身的toString方法。如果toString方法返回原始类型的值，则对该值使用Number函数，不再进行后续步骤。
+- 第三步，如果toString方法返回的是对象，就报错。
+
+#### String()
+##### 原始类型值
+```
+String(123) // "123"
+String('abc') // "abc"
+String(true) // "true"
+String(undefined) // "undefined"
+String(null) // "null"
+```
+##### 对象
+String方法的参数如果是对象，返回一个类型字符串；如果是数组，返回该数组的字符串形式。
+```
+String({a: 1}) // "[object Object]"
+String([1, 2, 3]) // "1,2,3"
+```
+String方法背后的转换规则，与Number方法基本相同，只是互换了valueOf方法和toString方法的执行顺序。
+#### Boolean()
+Boolean()函数可以将任意类型的值转为布尔值。
+除了以下六个情况的转换结果为false，其他的值全部为true。因为 JavaScript 语言设计的时候，出于性能的考虑，如果对象需要计算才能得到布尔值，对于obj1 && obj2这样的场景，可能会需要较多的计算。为了保证性能，就统一规定，对象的布尔值为true。
+```
+Boolean(undefined) // false
+Boolean(null) // false
+Boolean(0) // false
+Boolean(NaN) // false
+Boolean('') // false
+Boolean(false) // false
+
+Boolean({}) // true
+Boolean([]) // true
+Boolean(new Boolean(false)) // true
+```
+### 自动转换
+自动转换，它是以强制转换为基础的。自动转换的规则是这样的：预期什么类型的值，就调用该类型的转换函数。如果该位置既可以是字符串，也可能是数值，那么默认转为数值。
+遇到以下三种情况时，JavaScript 会自动转换数据类型
+- 不同类型的数据互相运算
+- 对非布尔值类型的数据求布尔值
+- 对非数值类型的值使用一元运算符（即+和-）
+
+#### 自动转换为布尔值
+有时也用于将一个表达式转为布尔值。它们内部调用的也是Boolean()函数。
+```
+// 写法一
+expression ? true : false
+
+// 写法二
+!! expression
+```
+#### 自动转换为字符串
+先将复合类型的值转为原始类型的值，再将原始类型的值转为字符串。当一个值为字符串，另一个值为非字符串，则后者转为字符串。
+#### 自动转换为数值
+除了加法运算符（+）有可能把运算子转为字符串，其他运算符都会把运算子自动转成数值。
+null转为数值时为0，而undefined转为数值时为NaN。一元运算符也会把运算子转成数值。
+```
++'abc' // NaN
+-'abc' // NaN
++true // 1
+-false // 0
+```
+## 错误处理机制
+### Error实例对象
+JavaScript 原生提供Error构造函数，所有抛出的错误都是这个构造函数的实例。
+JavaScript 语言标准只提到，Error实例对象必须有message属性，表示出错时的提示信息，没有提到其他属性。大多数 JavaScript 引擎，对Error实例还提供name(错误名称)和stack属性(错误的堆栈)，分别表示错误的名称和错误的堆栈，但它们是非标准的，不是每种实现都有。
+### 原生错误类型
+Error实例对象是最一般的错误类型，在它的基础上，JavaScript 还定义了其他6种错误对象。也就是说，存在Error的6个派生对象。
+#### SyntaxError 对象
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 错误处理机制
+## 编程风格
+## console 对象与控制台
 
 
 

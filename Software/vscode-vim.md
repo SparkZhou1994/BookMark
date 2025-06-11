@@ -11,6 +11,7 @@ settings.json
 
   "editor.acceptSuggestionOnEnter": "smart",
   "editor.bracketPairColorization.enabled": true,
+  "editor.codeLens": true,
   "editor.cursorBlinking": "smooth",
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.formatOnPaste": true,
@@ -291,6 +292,7 @@ doxygen documentation generator
 hungry delete
 codeSnap
 code Runner
+MybatisX
 
 ## test
 rest client
