@@ -1322,35 +1322,120 @@ JavaScript 语言标准只提到，Error实例对象必须有message属性，表
 ### 原生错误类型
 Error实例对象是最一般的错误类型，在它的基础上，JavaScript 还定义了其他6种错误对象。也就是说，存在Error的6个派生对象。
 #### SyntaxError 对象
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 错误处理机制
+SyntaxError对象是解析代码时发生的语法错误。
+#### ReferenceError 对象
+ReferenceError对象是引用一个不存在的变量时发生的错误。另一种触发场景是，将一个值分配给无法分配的对象，比如对函数的运行结果赋值。
+#### RangeError 对象
+RangeError对象是一个值超出有效范围时发生的错误。主要有几种情况，一是数组长度为负数，二是Number对象的方法参数超出范围，以及函数堆栈超过最大值。
+#### TypeError 对象
+TypeError对象是变量或参数不是预期类型时发生的错误。比如，调用对象不存在的方法。
+#### URIError 对象
+URIError对象是 URI 相关函数的参数不正确时抛出的错误，主要涉及encodeURI()、decodeURI()、encodeURIComponent()、decodeURIComponent()、escape()和unescape()这六个函数。
+#### EvalError 对象
+eval函数没有被正确执行时，会抛出EvalError错误。该错误类型已经不再使用了，只是为了保证与以前代码兼容，才继续保留。
 ## 编程风格
+### 变量声明
+JavaScript 会自动将变量声明“提升”（hoist）到代码块（block）的头部。JavaScript 会自动将变量声明“提升”（hoist）到代码块（block）的头部。所有函数都应该在使用之前定义。函数内部的变量声明，都应该放在函数的头部。
+### 相等和严格相等
+相等运算符会自动转换变量类型，造成很多意想不到的情况。
+### 自增和自减运算符
+建议自增（++）和自减（--）运算符尽量使用+=和-=代替。
+### switch...case 结构
+```
+function doAction(action) {
+  switch (action) {
+    case 'hack':
+      return 'hack';
+    case 'slash':
+      return 'slash';
+    case 'run':
+      return 'run';
+    default:
+      throw new Error('Invalid action.');
+  }
+}
+
+// switch代码建议改写成对象结构
+function doAction(action) {
+  var actions = {
+    'hack': function () {
+      return 'hack';
+    },
+    'slash': function () {
+      return 'slash';
+    },
+    'run': function () {
+      return 'run';
+    }
+  };
+
+  if (typeof actions[action] !== 'function') {
+    throw new Error('Invalid action.');
+  }
+
+  return actions[action]();
+}
+```
 ## console 对象与控制台
+### console 对象
+console对象是 JavaScript 的原生对象，它有点像 Unix 系统的标准输出stdout和标准错误stderr，可以输出各种信息到控制台，并且还提供了很多有用的辅助方法。
+### console 对象的静态方法
+console对象的所有方法，都可以被覆盖。因此，可以按照自己的需要，定义console.log方法。
+```
+['log', 'info', 'warn', 'error'].forEach(function(method) {
+  console[method] = console[method].bind(
+    console,
+    new Date().toISOString()
+  );
+});
 
+console.log("出错了！");
+// 2014-05-18T09:00.000Z 出错了！
+```
+#### console.log()，console.info()，console.debug()
+##### console.log()
+console.log方法支持以下占位符，不同类型的数据必须使用对应的占位符。
+- %s 字符串
+- %d 整数
+- %i 整数
+- %f 浮点数
+- %o 对象的链接
+- %c CSS 格式字符串
 
+```
+console.log(' %s + %s ', 1, 1, '= 2')
+// 1 + 1  = 2
+```
+##### console.info()
+与console.log方法的别名，用法完全一样。只不过console.info方法会在输出信息的前面，加上一个蓝色图标。
+##### console.debug()
+默认情况下，console.debug输出的信息不会显示，只有在打开显示级别在verbose的情况下，才会显示。
+#### console.warn()，console.error()
+warn方法输出信息时，在最前面加一个黄色三角，表示警告；error方法输出信息时，在最前面加一个红色的叉，表示出错。同时，还会高亮显示输出文字和错误发生的堆栈。
+可以这样理解，log方法是写入标准输出（stdout），warn方法和error方法是写入标准错误（stderr）。
+#### console.table()
+对于某些复合类型的数据，console.table方法可以将其转为表格显示。
+#### console.count()
+count方法用于计数，输出它被调用了多少次。该方法可以接受一个字符串作为参数，作为标签，对执行次数进行分类。
+```
+function greet(user) {
+  console.count(user);
+  return "hi " + user;
+}
 
+greet('bob')
+// bob: 1
+// "hi bob"
 
+greet('alice')
+// alice: 1
+// "hi alice"
 
-
-
-
-
+greet('bob')
+// bob: 2
+// "hi bob"
+```
+#### console.dir()，console.dirxml()
 
 
 
