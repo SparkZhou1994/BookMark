@@ -1436,27 +1436,69 @@ greet('bob')
 // "hi bob"
 ```
 #### console.dir()，console.dirxml()
+##### console.dir()
+dir方法用来对一个对象进行检查（inspect），并以易于阅读和打印的格式显示。
+```
+// 该方法对于输出 DOM 对象非常有用，因为会显示 DOM 对象的所有属性。
+console.dir(document.body)
+// Node 环境之中，还可以指定以代码高亮的形式输出。
+console.dir(obj, {colors: true})
+```
+##### console.dirxml()
+dirxml方法主要用于以目录树的形式，显示 DOM 节点。如果参数不是 DOM 节点，而是普通的 JavaScript 对象，console.dirxml等同于console.dir。
+#### console.assert()
+console.assert方法主要用于程序运行过程中，进行条件判断，如果不满足条件，就显示一个错误，但不会中断程序执行。这样就相当于提示用户，内部状态不正确。
+#### console.time()，console.timeEnd()
+这两个方法用于计时，可以算出一个操作所花费的准确时间。
+```
+console.time('Array initialize');
+
+var array= new Array(1000000);
+for (var i = array.length - 1; i >= 0; i--) {
+  array[i] = new Object();
+};
+
+console.timeEnd('Array initialize');
+// Array initialize: 1914.481ms
+```
+#### console.group()，console.groupEnd()，console.groupCollapsed()
+console.group和console.groupEnd这两个方法用于将显示的信息分组。它只在输出大量信息时有用，分在一组的信息，可以用鼠标折叠/展开。console.groupCollapsed方法与console.group方法很类似，唯一的区别是该组的内容，在第一次显示时是收起的（collapsed），而不是展开的。
+```
+console.group('一级分组');
+console.log('一级分组的内容');
+
+console.group('二级分组');
+console.log('二级分组的内容');
+
+console.groupEnd(); // 二级分组结束
+console.groupEnd(); // 一级分组结束
 
 
+// groupCollapsed(
+console.groupCollapsed('Fetching Data');
 
+console.log('Request Sent');
+console.error('Error: Server not responding (500)');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+console.groupEnd();
+```
+#### console.trace()，console.clear()
+##### console.trace()
+console.trace方法显示当前执行的代码在堆栈中的调用路径。
+##### console.clear()
+console.clear方法用于清除当前控制台的所有输出，将光标回置到第一行。如果用户选中了控制台的“Preserve log”选项，console.clear方法将不起作用。
+### 控制台命令行 API
+#### \$_
+\$_属性返回上一个表达式的值。
+#### \$0 - \$4
+控制台保存了最近5个在 Elements 面板选中的 DOM 元素，\$0代表倒数第一个（最近一个），\$1代表倒数第二个，以此类推直到\$4。
+#### \$(selector)
+\$(selector)返回第一个匹配的元素，等同于document.querySelector()。注意，如果页面脚本对$有定义，则会覆盖原始的定义。比如，页面里面有 jQuery，控制台执行\$(selector)就会采用 jQuery 的实现，返回一个数组。
+#### \$\$(selector)
+\$\$(selector)返回选中的 DOM 对象，等同于document.querySelectorAll。
+#### \$x(path)
+\$x(path)方法返回一个数组，包含匹配特定 XPath 表达式的所有 DOM 元素。
+#### inspect(object)
 
 
 
