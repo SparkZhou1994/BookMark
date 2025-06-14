@@ -39,3 +39,14 @@ version 42.2
 version 2.2.5
 # INNA 
 version 1.3.5
+# ollama
+## installation
+docker pull ollama/ollama
+docker run -d -v /Users/sparkzhou/Documents/ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+## Usage
+### Command-Line
+docker container ls
+docker exec -it ollama /bin/bash
+ollama run model(1.5B)
+### continue
+apiBase: http://localhost:11434
