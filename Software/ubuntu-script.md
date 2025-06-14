@@ -1,3 +1,6 @@
+# root
+sudo passwd
+su
 # change source for 22.04.4
 ## backup
 ```
