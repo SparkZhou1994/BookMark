@@ -53,3 +53,4 @@ apiBase: http://localhost:11434
 # python
 version 3.10
 # xcode
+11.3.1
