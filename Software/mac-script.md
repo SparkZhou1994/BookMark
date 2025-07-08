@@ -50,3 +50,7 @@ docker exec -it ollama /bin/bash
 ollama run model(1.5B)
 ### continue
 apiBase: http://localhost:11434
+# python
+version 3.10
+# xcode
+11.3.1

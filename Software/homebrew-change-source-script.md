@@ -46,3 +46,11 @@ brew update
 ```
 ## 重置Homebrew Bottles源
 注释掉bash配置文件里的有关Homebrew Bottles即可恢复官方源。 重启bash或让bash重读配置文件。
+# 禁止自动更新(方法失效)
+```
+echo 'export HOMEBREW_NO_AUTO_UPDATE=true' >> ~/.bash_profile
+```
+# 禁止更新依赖
+```
+brew install ffmpeg --ignore-dependencies
+```
