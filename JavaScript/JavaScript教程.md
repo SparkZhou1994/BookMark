@@ -1693,8 +1693,12 @@ get是一个函数，表示该属性的取值函数（getter），默认为undef
 set是一个函数，表示该属性的存值函数（setter），默认为undefined。
 
 ### Object.getOwnPropertyDescriptor()
-
-
+该方法可以获取属性描述对象。第一个参数是目标对象，第二个参数事属性名。
+该方法只能用于自身的属性，不能用于继承的属性。
+### Object.getOwnPropertyNames()
+方法返回对象自身的全部属性名。这和Object.keys不同，后者只返回对象自身可遍历的属性名。
+### Object.defineProperty()，Object.defineProperties()
+该方法允许通过属性描述对象，定义或修改一个属性，然后返回修改后的对象。
 
 
 
