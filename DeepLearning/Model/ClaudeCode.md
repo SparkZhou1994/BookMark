@@ -4,16 +4,24 @@
 ```
 {
   "env": {
-      "HTTP_PROXY": "http://127.0.0.1:7890",
-      "HTTPS_PROXY": "http://127.0.0.1:7890",
-      "ANTHROPIC_AUTH_TOKEN": "API",
-      "ANTHROPIC_BASE_URL": "代理",
-      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
-  }，
+    "HTTP_PROXY": "http://127.0.0.1:7890",
+    "HTTPS_PROXY": "http://127.0.0.1:7890",
+    "ANTHROPIC_AUTH_TOKEN": "sk-",
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
+    "ANTHROPIC_MODEL": "deepseek-chat",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-chat",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-chat",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-chat",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "deepseek-chat",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "32000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
   "permissions": {
-      "allow": [],
-      "deny": []
-  }
+    "defaultMode": "plan",
+    "allow": [],
+    "deny": []
+  },
+  "alwaysThinkingEnabled": false
 }
 ```
 ### 环境变量(没用需要登陆)
@@ -605,6 +613,29 @@ project.md
 - 商业机密代码
 ## 代码审查的新挑战
 ## 对开发者的影响
+
+
+
+
+
+# Claude Code 从 0 到 1 全攻略：MCP / SubAgent / Agent Skill / Hook / 图片 / 上下文处理/ 后台任务
+## 复杂任务处理与终端控制
+### ! 进入Bash模式
+可Ctrl+g进入VsCode进行编辑
+/task可以查看后台任务
+## 多模态与上下文管理
+### 版本回滚
+/rewind 或 两下Esc
+### 安装 MCP Server
+claude mcp add --transport http figma https://mcp.figma.com/mcp
+在Figma里Copy link to selection，在Claude里“修改当前页面，使它与figma稿件保持一致， link”
+## 高级功能扩展与定制
+### Hook
+### Agent Skill
+创建一个文件夹skill，适合与上下文关联大的任务
+### SubAgent
+独立上下文
+### Plugin
 
 
 

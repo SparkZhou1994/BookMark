@@ -7,7 +7,7 @@
 - Machine Learning.md, 吴恩达, Stanford
 ### Model
 - ChatGPT.md, 黑马程序员ChatGPT视频教程
-- ClaudeCode.md, B站诸葛老师？
+- ClaudeCode.md, B站诸葛老师,马克的技术工作坊
 
 ## English
 - 10小时刷完考研核心母词990.md, 王无术
