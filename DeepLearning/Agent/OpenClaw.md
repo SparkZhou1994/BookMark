@@ -1,0 +1,112 @@
+# docker
+## install[docker-compose.yml]
+```
+services:
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+    environment:
+      HOME: /home/node
+    volumes:
+      # 默认持久化
+      - ~/Documents/Software/OpenClaw/.openclaw:/home/node/.openclaw
+      - ~/Documents/Software/OpenClaw/.openclaw/workspace:/home/node/.openclaw/workspace
+      # ========== 自定义宿主机挂载 ==========
+      # 宿主机路径:容器内路径:权限 ro = readonly rw = read-write
+      # - /home/ubuntu/文档:/host/docs:ro
+      # /root/.openclaw/config.yaml
+      # agents:
+      #  defaults:
+      #    sandbox:
+      #      docker:
+      #        binds:
+      #          - "/host/docs:/host/docs:ro"
+```
+### onboard
+openclaw onboard
+#### gateway config[openclaw.json]
+```
+"bind": "lan",
+```
+#### permission config[openclaw.json]
+```
+"tools": {
+  "profile": "full"
+}
+```
+#### channels
+##### dingtalk
+###### install
+openclaw plugins install @soimy/dingtalk
+###### config
+openclaw config
+#### model
+```
+"models": {
+  "mode": "merge",
+  "providers": {
+    "volcengine-plan": {
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/coding/v3",
+      "apiKey": "",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "deepseek-v3.2",
+          "name": "deepseek-v3.2",
+          "contextWindow": 128000,
+          "maxTokens": 32000,
+          "input": [
+            "text"
+          ]
+        },
+        {
+          "id": "kimi-k2.5",
+          "name": "kimi-k2.5",
+          "contextWindow": 256000,
+          "maxTokens": 32000,
+          "input": [
+            "text",
+            "image"
+          ]
+        }
+      ]
+    }
+  }
+},
+"agents": {
+  "defaults": {
+    "workspace": "/home/node/.openclaw/workspace",
+    "models": {
+      "volcengine-plan/deepseek-v3.2": {},
+      "volcengine-plan/kimi-k2.5": {}
+    },
+    "model": {
+      "primary": "volcengine-plan/deepseek-v3.2"
+    },
+    "compaction": {
+      "mode": "safeguard"
+    }
+  }
+},
+```
+# 安全
+## 本地网关认证
+```
+# 生成token并放入 ~/.openclaw/token.txt
+openssl rand -hex 32
+# 设置环境变量
+setx OPENCLAW_GATEWAY_TOKEN "xxxxxxxxxxxxxx"
+# ~/.openclaw/openclaw.json
+{
+  "gateway": {
+    "auth": {
+      "type": "token",
+      "token": "xxxxxxxxxxxxxx"
+    }
+  }
+}
+# 可通过openclaw dashboard --no-open，获取带有token的链接
+```

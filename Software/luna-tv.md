@@ -1,5 +1,5 @@
 # luna-tv
-## install
+## install[docker-compose.yml]
 ```
 services:
   moontv-core:
