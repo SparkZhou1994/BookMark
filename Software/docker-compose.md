@@ -24,11 +24,6 @@ sudo chmod a+r /etc/apt/keyrings/docker.gpg
 ```bash
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
-> **国内用户备选**（使用阿里云镜像源，速度更快）：
-> ```bash
-> curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-> echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-> ```
 ### 5. 安装 Docker Engine + Docker Compose
 ```bash
 sudo apt-get update
@@ -42,22 +37,18 @@ sudo usermod -aG docker $USER
 # 让配置立即生效（不需要重新登录）
 newgrp docker
 ```
-### 2. 配置镜像加速器（国内用户必做）
+### 2. 配置代理
 ```bash
-sudo tee /etc/docker/daemon.json <<-'EOF'
-{
-  "registry-mirrors": [
-    "https://mirror.iscas.ac.cn",
-    "https://docker.mirrors.ustc.edu.cn",
-    "https://hub-mirror.c.163.com"
-  ],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m",
-    "max-file": "3"
-  }
-}
-EOF
+sudo mkdir -p /etc/systemd/system/docker.service.d
+touch proxy.conf
+```
+``` proxy.conf
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:7890"
+Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+Environment="NO_PROXY=localhost,127.0.0.1,*.local,*.internal,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+```
+
 # 重启 Docker 服务使配置生效
 sudo systemctl daemon-reload
 sudo systemctl restart docker
