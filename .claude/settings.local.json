@@ -9,7 +9,18 @@
       "Bash(python3 *)",
       "Bash(py *)",
       "Bash(uv run *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(fcitx-remote)",
+      "Bash(im-config -l)",
+      "Bash(ibus list-engine *)",
+      "Bash(ssh-add -l)",
+      "Bash(git config *)",
+      "Bash(chmod +x /tmp/fix-vscode-chinese-input.sh)",
+      "Bash(bash /tmp/fix-vscode-chinese-input.sh)",
+      "Bash(GIT_TRACE=1 git push --dry-run)",
+      "Bash(ssh -T git@github.com -v)",
+      "Bash(ssh *)",
+      "Bash(sudo apt *)"
     ]
   }
 }

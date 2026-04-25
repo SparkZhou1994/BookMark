@@ -11,6 +11,8 @@ cd ~/.ssh
 cat id_ed25519.pub
 ```
 ## add SSH on the github website
+## test
+ssh -T git@github.com
 
 # for brew
 ```
