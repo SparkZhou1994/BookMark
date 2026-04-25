@@ -27,7 +27,9 @@
       "Bash(sudo dpkg *)",
       "Bash(getent group *)",
       "Bash(sudo cp *)",
-      "Bash(sudo systemctl *)"
+      "Bash(sudo systemctl *)",
+      "Bash(sudo find *)",
+      "Bash(docker run *)"
     ]
   }
 }

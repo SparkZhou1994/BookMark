@@ -9,7 +9,13 @@ services:
     ports:
       - "18789:18789"
     environment:
-      HOME: /home/node
+      - HOME=/home/node
+      - HTTP_PROXY=http://172.17.0.1:7890
+      - HTTPS_PROXY=http://172.17.0.1:7890
+      - http_proxy=http://172.17.0.1:7890
+      - https_proxy=http://172.17.0.1:7890
+      - NO_PROXY=localhost,127.0.0.1,localaddress,.localdomain.com
+      - no_proxy=localhost,127.0.0.1,localaddress,.localdomain.com
     volumes:
       # 默认持久化
       - ~/Documents/Software/OpenClaw/.openclaw:/home/node/.openclaw
@@ -24,6 +30,13 @@ services:
       #      docker:
       #        binds:
       #          - "/host/docs:/host/docs:ro"
+```
+### permission
+``` bash
+id spark
+sudo chown -R 1000:1000 /home/spark/Software/OpenClaw/
+chown -R node:node /home/node/.openclaw
+chmod -R 755 /home/node/.openclaw
 ```
 ### onboard
 openclaw onboard
