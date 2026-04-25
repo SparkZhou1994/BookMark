@@ -16,3 +16,5 @@ NO_PROXY="localhost,127.0.0.1,::1,192.168.0.0/16,localaddress,.localdomain.com"
 ```
 ## chrome
 --proxy-server=127.0.0.1:7890
+## ssh
+sudo apt install ssh-askpass
