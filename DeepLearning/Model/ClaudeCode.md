@@ -1,5 +1,7 @@
 # 快速入门与配置
 ## 课程介绍与安装
+### install
+npm install -g @anthropic-ai/claude-code
 ### .claude/settings.json
 ```
 {

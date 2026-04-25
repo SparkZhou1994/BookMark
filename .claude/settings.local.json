@@ -8,7 +8,8 @@
       "Bash(python *)",
       "Bash(python3 *)",
       "Bash(py *)",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "WebSearch"
     ]
   }
 }
