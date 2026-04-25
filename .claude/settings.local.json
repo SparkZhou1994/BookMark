@@ -20,7 +20,14 @@
       "Bash(GIT_TRACE=1 git push --dry-run)",
       "Bash(ssh -T git@github.com -v)",
       "Bash(ssh *)",
-      "Bash(sudo apt *)"
+      "Bash(sudo apt *)",
+      "Bash(dpkg -l)",
+      "Bash(sudo sed *)",
+      "Bash(sudo update-desktop-database *)",
+      "Bash(sudo dpkg *)",
+      "Bash(getent group *)",
+      "Bash(sudo cp *)",
+      "Bash(sudo systemctl *)"
     ]
   }
 }
