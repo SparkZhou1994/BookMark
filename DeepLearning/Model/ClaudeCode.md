@@ -632,6 +632,8 @@ project.md
 ### 安装 MCP Server
 claude mcp add --transport http figma https://mcp.figma.com/mcp
 在Figma里Copy link to selection，在Claude里“修改当前页面，使它与figma稿件保持一致， link”
+
+figma-remote-mcp
 ## 高级功能扩展与定制
 ### Hook
 ### Agent Skill
@@ -639,3 +641,5 @@ claude mcp add --transport http figma https://mcp.figma.com/mcp
 ### SubAgent
 独立上下文
 ### Plugin
+claude-mem
+superpowers

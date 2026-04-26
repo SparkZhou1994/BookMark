@@ -105,6 +105,18 @@ openclaw config
   }
 },
 ```
+# skill
+eddygk/skill-vetting
+xiucheng/xiucheng-self-improving-agent
+matthew77/liang-tavily-search
+summarize
+fangkelvin/find-skills-skill
+superpowers
+analsharqy/react-best-practices-2
+michaelmonetized/frontend-design-3
+steipete/github
+guohongbin-git/github-trending-cn
+matrixy/agent-browser-clawdbot
 # 安全
 ## 本地网关认证
 ```
