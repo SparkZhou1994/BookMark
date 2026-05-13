@@ -5,6 +5,10 @@ npm install -g @anthropic-ai/claude-code
 ### .claude/settings.json
 ```
 {
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Sonnet <noreply@anthropic.com>",
+    "pr": "Generated with Claude Code"
+  },
   "env": {
     "HTTP_PROXY": "http://127.0.0.1:7890",
     "HTTPS_PROXY": "http://127.0.0.1:7890",
@@ -22,6 +26,10 @@ npm install -g @anthropic-ai/claude-code
     "defaultMode": "plan",
     "allow": [],
     "deny": []
+  },
+  "enabledPlugins": {
+    "claude-mem@thedotmack": true,
+    "superpowers@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": false
 }
