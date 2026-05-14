@@ -42,7 +42,38 @@ chmod -R 755 /home/node/.openclaw
 openclaw onboard
 #### gateway config[openclaw.json]
 ```
-"bind": "lan",
+"gateway": {
+  "auth": {
+    "mode": "token",
+    "token": ""
+  },
+  "controlUi": {
+    "allowInsecureAuth": true,
+    "allowedOrigins": [
+      "http://localhost:18789",
+      "http://127.0.0.1:18789"
+    ]
+  },
+  "mode": "local",
+  "port": 18789,
+  "bind": "lan",
+  "tailscale": {
+    "mode": "off",
+    "resetOnExit": false
+  },
+  "nodes": {
+    "denyCommands": [
+      "camera.snap",
+      "camera.clip",
+      "screen.record",
+      "contacts.add",
+      "calendar.add",
+      "reminders.add",
+      "sms.send",
+      "sms.search"
+    ]
+  }
+}
 ```
 #### permission config[openclaw.json]
 ```
@@ -56,6 +87,42 @@ openclaw onboard
 openclaw plugins install @soimy/dingtalk
 ###### config
 openclaw config
+```
+"channels": {
+` "dingtalk": {
+    "enabled": true,
+    "clientId": "ding9k698fqj1hbgpr5p",
+    "clientSecret": "",
+    "dmPolicy": "allowlist",
+    "groupPolicy": "allowlist",
+    "displayNameResolution": "disabled",
+    "messageType": "card",
+    "cardStreamingMode": "off",
+    "maxReconnectCycles": 10,
+    "mediaMaxMb": 20,
+    "journalTTLDays": 7,
+    "allowFrom": [
+      "manager4767",
+      "cidtOBe0qht120TsvjdTvb9FA=="
+    ]
+  }
+},
+"session": {
+  "dmScope": "per-channel-peer"
+},
+"messages": {
+  "groupChat": {
+    "visibleReplies": "message_tool"
+  }
+},
+"plugins": {
+  "entries": {
+    "dingtalk": {
+      "enabled": true
+    }
+  }
+}
+```
 #### model
 ```
 "models": {
@@ -104,6 +171,13 @@ openclaw config
     }
   }
 },
+"plugins": {
+  "entries": {
+    "volcengine": {
+      "enabled": true
+    }
+  }
+}
 ```
 # init personality
 ## AGENTS.md
