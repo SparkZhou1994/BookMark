@@ -651,3 +651,34 @@ figma-remote-mcp
 ### Plugin
 claude-mem
 superpowers
+
+# claude-101
+## Meet Claude
+### What is Claude
+#### Key takeaways
+- Claude is built to be helpful, harmless, and honest
+- Claude is more than a chatbot
+- Claude is designed to be steerable and collaborative
+Claude can take direction on personality, tone, and behavior, and customers report that Claude is much less likely to produce harmful outputs, easier to converse with, and more steerable—so you can get your desired output with less effort.
+- You can access Claude wherever you work
+#### Understanding Claude's capabilities
+Here's a few things Claude excels at
+- Writing and content creation
+Claude can collaborate with you on social media posts, professional emails, and complex reports.
+- Research and analysis
+Claude helps you explore research angles, compile findings, and analyze data to surface meaningful insights.This is enabled by Claude's large context window, which can ingest 200K+ tokens (about 500 pages of text or more)
+- Coding assistance
+- Problem-solving and reasoning
+Claude Opus 4.7 and Sonnet 4.7 are hybrid models offering two modes: near-instant responses and extended thinking for deeper reasoning. 这种hybrid是推理hybrid，运行策略融合，普通输出+深度思考。还有一种是架构hybrid，结构融合，CNN+Transformer，传统模型+深度学习。
+- Learning new things
+
+Get inspired on ways to use Claude in your specific function by exploring our *use-case* gallery on claude.com. For a deeper dive into what AI can (and can't) do, see our *AI Capabilities* course.
+
+#### Ways to access Claude
+- Claude.ai 
+Here, you can ask questions, brainstorm ideas, create and edit documents, and a lot more. Claude.ai is ideal for conversations, writing assistance, research, analysis, and creating files. This is our focus in this course.
+- Claude Code
+It is an agentic coding tool that is designed for developers but can be used for all kinds of file manipulation on your desktop.
+- Claude and Slack
+- Claude for Excel
+### Your first conversation with Claude
